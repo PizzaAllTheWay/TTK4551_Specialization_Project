@@ -30,9 +30,9 @@ A prior anchors the graph (otherwise the problem is underdetermined up to a glob
 \\ \\
 We want our predictions to match measurements. In a perfect world, every residual (prediction minus measurement) would be zero. In reality we have model errors and sensor noise, so residuals are nonzero. Estimation is about choosing the state update that makes all residuals as small and as statistically consistent as possible.
 \\ \\
-This is where MAP algorithm comes in. MAP (Maximum A Posteriori) is the principled way to fuse everything we know. A prior on the state, the motion model, and all measurements. It combines them through probability, weighting each residual by its uncertainty. With Gaussian noise, the negative log posterior becomes a sum of squared (weighted) residuals. That gives us a single objective to minimize, where more reliable terms (small covariance) count more. This is better than ad hoc weighting and naturally handles many sensors.
+This is where \gls{MAP} algorithm comes in. \gls{MAP} (Maximum A Posteriori) is the principled way to fuse everything we know. A prior on the state, the motion model, and all measurements. It combines them through probability, weighting each residual by its uncertainty. With Gaussian noise, the negative log posterior becomes a sum of squared (weighted) residuals. That gives us a single objective to minimize, where more reliable terms (small covariance) count more. This is better than ad hoc weighting and naturally handles many sensors.
 \\ \\
-Our motion and measurement functions are nonlinear (angles, rotations, ranges). Minimizing the nonlinear MAP cost directly is hard. Linearization lets us solve it iteratively. At the current estimate we approximate the nonlinear functions by their first order Taylor expansion, solve a linear least squares problem for a small increment, update the estimate, and repeat. This is all shown in the iSAM paper \cite{iSAM_paper} where linearized forms of our system becomes:
+Our motion and measurement functions are nonlinear (angles, rotations, ranges). Minimizing the nonlinear \gls{MAP} cost directly is hard. Linearization lets us solve it iteratively. At the current estimate we approximate the nonlinear functions by their first order Taylor expansion, solve a linear least squares problem for a small increment, update the estimate, and repeat. This is all shown in the \gls{iSAM} paper \cite{iSAM_paper} where linearized forms of our system becomes:
 \begin{equation}
     \begin{aligned}
         f_{i}(x_{i-1}, u_i) - x_i \approx (F_{i}^{i-1}\Delta x_{i-1} - \Delta x_{i}) - a_i \\
@@ -67,7 +67,7 @@ with $H$ and $J$ the measurement Jacobians with respect to the involved pose and
 \\ \\
 Each residual is measured with a Mahalanobis norm $\|r\|_{\Sigma}^2 := r^\top \Sigma^{-1} r$, using its own covariance, $\Lambda_i$ for odometry and $\Gamma_k$ for measurements. This matters because Mahalanobis distance ``bakes in'' uncertainty. Directions the sensor is confident about are penalized more. Noisy or correlated directions are penalized less, and the metric tilts along correlated axes. As a result, we judge errors not in plain Euclidean meters/radians but in ``standard-deviation units'' tailored to each factor.. Intuitively, this turns ``Euclidean space + covariance'' into Mahalanobis space, where the residual ellipses already encode the right weighting. That is why the covariance symbols appear inside the cost, uncertainty is not ignored, it's embedded in how distance is measured. With this, the whole objective of equation \eqref{eq:optimizer-iSAM-delta-theta-star-mahalanobis-form} is just ``add up all these linearized residuals, each judged fairly in its own noise units, and pick the $\Delta\theta^{*}$ that makes the total smallest''. Intuitively, we can think of each factor as a spring pulling on the variables. Mahalanobis scaling makes the springs stiff along low noise directions and soft along high noise ones, so the solution balances all pulls by their reliability.
 \\ \\
-Collecting all linearized factors with their covariances, the MAP update $\Delta\theta^{*}$ is obtained by minimizing the following Mahalanobis-weighted least-squares objective:
+Collecting all linearized factors with their covariances, the \gls{MAP} update $\Delta\theta^{*}$ is obtained by minimizing the following Mahalanobis-weighted least-squares objective:
 \begin{equation}
     \begin{aligned}
         \Delta\theta^{*} = 
@@ -85,7 +85,7 @@ Collecting all linearized factors with their covariances, the MAP update $\Delta
     \label{fig:mahalanobis-distance}
 \end{figure}
 \noindent
-Mahalanobis distance is just ``error measured in the units of its noise'' (See Figure \ref{fig:mahalanobis-distance}). If a residual has high variance, we shouldn't punish it as much, if two components are correlated, we shouldn't treat them as independent. That's what the covariance does. In the left plot (Euclidean), all directions are weighted equally so the inlier region is a circle. In the right plot (Mahalanobis), directions with low uncertainty are tighter and correlated axes tilt the ellipse. In our SLAM cost, each residual (process or measurement) is evaluated with its own covariance. Small reliable noises count more, whilst large noisy ones count less. When two parts of a measurement drift together, their error isn't along x or y alone, it's along some tilted direction. Mahalanobis tilts the ``penalty shape'' to match that direction. We are punished less along noisy directions and more where the sensor is precise.
+Mahalanobis distance is just ``error measured in the units of its noise'' (See Figure \ref{fig:mahalanobis-distance}). If a residual has high variance, we shouldn't punish it as much, if two components are correlated, we shouldn't treat them as independent. That's what the covariance does. In the left plot (Euclidean), all directions are weighted equally so the inlier region is a circle. In the right plot (Mahalanobis), directions with low uncertainty are tighter and correlated axes tilt the ellipse. In our \gls{SLAM} cost, each residual (process or measurement) is evaluated with its own covariance. Small reliable noises count more, whilst large noisy ones count less. When two parts of a measurement drift together, their error isn't along x or y alone, it's along some tilted direction. Mahalanobis tilts the ``penalty shape'' to match that direction. We are punished less along noisy directions and more where the sensor is precise.
 \\ \\
 Equation \eqref{eq:optimizer-iSAM-delta-theta-star-mahalanobis-form} is a sum of Mahalanobis residuals (process terms use $\Lambda_i$, measurement terms use $\Gamma_k$). To turn that into one clean least squares system, we ``whiten'' each residual so its noise is unit, for scalars divide by the standard deviation, for vectors apply the covariance's square root inverse to the residual and its Jacobians $\Sigma^{-1}$. After whitening, all errors are ordinary Euclidean ones, so we drop the covariance symbols, stack the Jacobians into one big sparse matrix $A$, stack the prediction errors into $b$, and solve the standard least squares problem \eqref{eq:optimizer-iSAM-delta-theta-star}.
 \begin{equation}
@@ -94,7 +94,7 @@ Equation \eqref{eq:optimizer-iSAM-delta-theta-star-mahalanobis-form} is a sum of
 \end{equation}
 Here, $\theta$ stacks all unknowns (robot poses $x$ and landmarks $l$), $A$ is the single large, sparse (whitened) measurement Jacobian formed by stacking the block Jacobians $F, G, H,$ and $J$ from the linearized motion and measurement models, and $b$ is the stacked prediction error vector that collects the current odometry errors $a$ and measurement errors $c$ with a consistent sign convention. Intuitively, $A$ describes how residuals change for small state perturbations, $b$ encodes the present mismatch between predictions and measurements, and solving equation (\ref{eq:optimizer-iSAM-delta-theta-star}) yields the best local correction $\Delta\theta^\star$ used to update the estimate.
 \\ \\
-In the linearized setting, the optimal increment $\Delta\theta^\star$ is found by setting the gradient of the least squares objective to zero. This yields the normal equations according to iSAM paper \cite{iSAM_paper}:
+In the linearized setting, the optimal increment $\Delta\theta^\star$ is found by setting the gradient of the least squares objective to zero. This yields the normal equations according to \gls{iSAM} paper \cite{iSAM_paper}:
 $$
     A^{T}A\Delta\theta = A^{T}b
 $$
@@ -106,9 +106,9 @@ $$
 
 
 \subsubsection{Incremental QR for fast updates (iSAM)}
-We solve the linearized SLAM subproblem by least squares. Solving the normal equations $(A^\top A)\Delta\theta = A^\top b$ with Cholesky can be fast but very unstable and ill conditioned as the problem grows (it squares the condition number and increases fill in). iSAM avoids this by working directly with the whitened Jacobian $A$ using QR factorization, and by updating that factorization incrementally when new factors arrive.
+We solve the linearized \gls{SLAM} subproblem by least squares. Solving the normal equations $(A^\top A)\Delta\theta = A^\top b$ with Cholesky can be fast but very unstable and ill conditioned as the problem grows (it squares the condition number and increases fill in). \gls{iSAM} avoids this by working directly with the whitened Jacobian $A$ using QR factorization, and by updating that factorization incrementally when new factors arrive.
 \\ \\
-Batch square root form (QR on the Jacobian) can be shown in iSAM paper \cite{iSAM_paper} to be of form:
+Batch square root form (QR on the Jacobian) can be shown in \gls{iSAM} paper \cite{iSAM_paper} to be of form:
 
 $$
     A \;=\; Q
@@ -133,7 +133,7 @@ $$
 $$
 
 \noindent
-The iSAM paper \cite{iSAM_paper} shows that after QR we have:
+The \gls{iSAM} paper \cite{iSAM_paper} shows that after QR we have:
 $$
     A\Delta\theta - b \;=\;
     \begin{bmatrix} R \\ 0 \end{bmatrix}\Delta\theta -
@@ -151,7 +151,7 @@ Put simply, once we do QR, the error splits into two parts. To make the total er
 \noindent
 leaving $\|e\|^2$ as the (minimal) residual norm. If $R$ has full rank, this linearized system has one singular unique solution $\Delta\theta^\star$.
 \\ \\
-In iSAM the matrix $R$ is upper triangular, so we solve equation (\ref{eq:optimizer-iSAM-fast-solution}) by back substitution (no matrix inverse). This gives a fast, numerically stable way to compute the correction and update the state $\theta \leftarrow \theta + \Delta\theta^\star$ without heavy compute.
+In \gls{iSAM} the matrix $R$ is upper triangular, so we solve equation (\ref{eq:optimizer-iSAM-fast-solution}) by back substitution (no matrix inverse). This gives a fast, numerically stable way to compute the correction and update the state $\theta \leftarrow \theta + \Delta\theta^\star$ without heavy compute.
 
 
 
@@ -268,7 +268,7 @@ $$
         \begin{subfigure}[t]{0.49\linewidth}
             \centering
             \includegraphics[width=\linewidth,height=0.20\textheight,keepaspectratio]{Pictures/Optimizers/iSAM/Variable_Reordering3.png}
-            \caption{The same $R$ after variable reordering (COLAMD) becomes sparser again.\textsuperscript{\cite{iSAM_paper}}}\label{fig:l-bot-right}
+            \caption{The same $R$ after variable reordering (\gls{COLAMD}) becomes sparser again.\textsuperscript{\cite{iSAM_paper}}}\label{fig:l-bot-right}
         \end{subfigure}
     \end{minipage}\hfill
     % ---------- Right column ----------
@@ -294,7 +294,7 @@ Because reordering is expensive, we don't do it every step. Instead we do period
 \subsubsection{Re-Linearization}
 Re-linearization keeps the local model honest. All the QR/update tricks we have gone through now assume the system is locally linear around the current estimate, but with angles, 3D motion, and nonlinear sensors that linearization drifts as the robot moves. If we never refresh it, increments stop being small, the optimizer biases the map, and loop closures can break the solution. The fix is to re-linearize, recompute Jacobians at the current state for the factors that matter. Doing this for every factor at every step is too expensive, so in practice we always linearize new factors (fresh odometry and measurements) and refresh older ones only when needed.
 \\ \\
-In iSAM the practical schedule is to perform incremental updates between maintenance cycles, then do a full re-linearization at a fixed interval N. Between cycles we do not re-linearize old factors, we only whiten and insert the new ones and update $R$ incrementally. At the cycle boundary when we hit N steps, we re-linearize the entire problem at the current estimate (conceptually rebuild the full Jacobian $A$), run a variable reordering to restore sparsity using \gls{COLAMD}, and refactor using equation \eqref{eq:optimizer-iSAM-givens-rotation} to get a fresh triangular $R$. Thats why we usually bunch variable reordering with batch linearization in the same N step. 
+In \gls{iSAM} the practical schedule is to perform incremental updates between maintenance cycles, then do a full re-linearization at a fixed interval N. Between cycles we do not re-linearize old factors, we only whiten and insert the new ones and update $R$ incrementally. At the cycle boundary when we hit N steps, we re-linearize the entire problem at the current estimate (conceptually rebuild the full Jacobian $A$), run a variable reordering to restore sparsity using \gls{COLAMD}, and refactor using equation \eqref{eq:optimizer-iSAM-givens-rotation} to get a fresh triangular $R$. Thats why we usually bunch variable reordering with batch linearization in the same N step. 
 \\ \\
 We must choose $N$ carefully, by balancing freshness vs compute. If N is too large, the linearization point drifts far from reality, Jacobians no longer match the true geometry, corrections become biased, loop closures pull hard, and the map can warp (a classic ``stale linearization'' issue). If N is too small, we keep stopping to relinearize and refactor, burning CPU and power and hurting real-time throughput.
 
@@ -333,7 +333,7 @@ $$
 \noindent
 \textbf{Fast marginals from the square root factor (online/live)} 
 \\ \noindent
-In iSAM paper \cite{iSAM_paper}, they propose keeping the current pose last in the ordering. Then the covariances needed for association, the pose variance $\Sigma_{x_i x_i}$ and the pose to landmark cross terms $\Sigma_{x_i l_j}$ come straight from the square root factor $R$ with two small triangular solves:
+In \gls{iSAM} paper \cite{iSAM_paper}, they propose keeping the current pose last in the ordering. Then the covariances needed for association, the pose variance $\Sigma_{x_i x_i}$ and the pose to landmark cross terms $\Sigma_{x_i l_j}$ come straight from the square root factor $R$ with two small triangular solves:
 $$
     R^\top Y = B,\qquad R X = Y
 $$
@@ -367,7 +367,7 @@ Intuitively we ``solve up'' then ``solve down'' on $R$ for the last pose, and we
 \noindent
 \textbf{Conservative landmark covariances (online/live)} 
 \\ \noindent
-Exact landmark landmark blocks $\Sigma_{jj}$ (or old pose to landmark $\Sigma_{(i-n)j}$) are expensive to extract at every step. Therefore in iSAM paper \cite{iSAM_paper} they propose using a safe, conservative bound built from the current pose covariance and the measurement noise via the linearized back projection:
+Exact landmark landmark blocks $\Sigma_{jj}$ (or old pose to landmark $\Sigma_{(i-n)j}$) are expensive to extract at every step. Therefore in \gls{iSAM} paper \cite{iSAM_paper} they propose using a safe, conservative bound built from the current pose covariance and the measurement noise via the linearized back projection:
 $$
     \tilde\Sigma_{jj}
     \;=\;
@@ -380,7 +380,7 @@ $$
 $$
 where $\bar J$ is the Jacobian of the local inverse measurement model, $\Sigma_{ii}$ is the current pose covariance, and $\Gamma$ is the measurement noise. This upper bounds landmark uncertainty (never over confident), is fast, and works well for online Mahalanobis gating. As more measurements of a landmark arrive, this bound typically tightens.
 \\ \\
-An important caveat to mention is that we usually don't know the true $\Gamma$ (measurement noise) exactly. The iSAM recipe is to choose $\Gamma$ conservatively so we don't get over confident. That keeps things safe but can make the gate too tight, causing the data association to reject more matches than it should. Later, we will discuss a more confident way to approximate $\Gamma$ from measurement characteristics without being overly confident (eks: range/resolution for sonar and landmark confidence) so the gate is realistic without being risky.
+An important caveat to mention is that we usually don't know the true $\Gamma$ (measurement noise) exactly. The \gls{iSAM} recipe is to choose $\Gamma$ conservatively so we don't get over confident. That keeps things safe but can make the gate too tight, causing the data association to reject more matches than it should. Later, we will discuss a more confident way to approximate $\Gamma$ from measurement characteristics without being overly confident (eks: range/resolution for sonar and landmark confidence) so the gate is realistic without being risky.
 \\ \\
 \textbf{Exact landmark covariances (on demand)} 
 \\ \noindent
@@ -392,7 +392,7 @@ We can get the needed entries without forming the full inverse by solving for tw
 $$
 R^\top Y = I, \qquad R \Sigma = Y
 $$
-We only follow the ``nonzeros'' of $R$ when solving. That means we don't touch the whole matrix, just the parts that matter. iSAM walks backwards along those non zero links and gives us exactly the covariance numbers $\sigma_{ij}$ Data Association ask for. If $R$ is mostly banded, this is near linear time. We should only use this exact method when we really need it (eks: a few $\Sigma_{jj}$ blocks to check on a loop closure). It's slower than the conservative shortcut, but still much faster than inverting the whole matrix.
+We only follow the ``nonzeros'' of $R$ when solving. That means we don't touch the whole matrix, just the parts that matter. \gls{iSAM} walks backwards along those non zero links and gives us exactly the covariance numbers $\sigma_{ij}$ Data Association ask for. If $R$ is mostly banded, this is near linear time. We should only use this exact method when we really need it (eks: a few $\Sigma_{jj}$ blocks to check on a loop closure). It's slower than the conservative shortcut, but still much faster than inverting the whole matrix.
 \\ \\
 \textbf{Alternative way to finding $\Gamma$} 
 \\ \noindent
@@ -420,7 +420,7 @@ At each time step we absorb new information, linearize around the current estima
     \item \textbf{Update the estimate:} replace the old state with the improved one,
     $\theta \leftarrow \theta + \Delta\theta^\star$.
 
-    \item \textbf{Every \(N\) steps (maintenance):} refresh accuracy by re-linearizing all factors at the new $\theta$, reorder variables (eks: COLAMD algorithm) to keep things sparse, and refactor with Givens \eqref{eq:optimizer-iSAM-givens-rotation} to get a clean $R$.
+    \item \textbf{Every \(N\) steps (maintenance):} refresh accuracy by re-linearizing all factors at the new $\theta$, reorder variables (eks: \gls{COLAMD} algorithm) to keep things sparse, and refactor with Givens \eqref{eq:optimizer-iSAM-givens-rotation} to get a clean $R$.
 
     \item \textbf{Data Association update:} read the needed covariances from $R$ (pose and pose to landmark live, landmark blocks conservative or exact on demand) and run Mahalanobis gating in Data Association for next matches.
 \end{enumerate}
@@ -428,13 +428,13 @@ At each time step we absorb new information, linearize around the current estima
 
 
 \subsubsection{Limitations}
-iSAM is fast between updates but has practical downsides. They come from the ``data structure'', not the underlying SLAM algorithm. iSAM keeps a single, global square root information matrix $R$ (from $A^\top A$) and does periodic maintenance (reordering + re-linearization). This makes updates simple, but couples cost to global structure and variable ordering instead of just local changes.
+\gls{iSAM} is fast between updates but has practical downsides. They come from the ``data structure'', not the underlying \gls{SLAM} algorithm. \gls{iSAM} keeps a single, global square root information matrix $R$ (from $A^\top A$) and does periodic maintenance (reordering + re-linearization). This makes updates simple, but couples cost to global structure and variable ordering instead of just local changes.
 \begin{itemize}
     \item \textbf{Latency spikes at maintenance:} Periodic global variable reordering and re-linearization trigger stalls (especially after loop closures), since $R$ must be refactored end to end.
 
     \item \textbf{Fill in growth between reorders:} Incremental QR on a fixed order accumulates fill in in $R$, touching more entries per update and increasing time/memory step by step.
 
-    \item \textbf{All or nothing re-linearization:} iSAM typically refreshes many factors at maintenance even if most variables barely moved, wasting Jacobian recomputations.
+    \item \textbf{All or nothing re-linearization:} \gls{iSAM} typically refreshes many factors at maintenance even if most variables barely moved, wasting Jacobian recomputations.
 
     \item \textbf{Global refactor on ordering changes:} Any change to elimination order implies a large refactor of the global $R$, regardless of how small the new information is.
 
