@@ -1,0 +1,22 @@
+\section{System Modeling}
+
+Introduction that for any navigation system it works best and is built on some assumptions about the movement of the robot and the sensor used, thsi is what we call motion model f() and measurement model h(), thsi is rigid body dynamics. In adition the robot needs to know where it is in relation to itself, its sensors and the world in a coherent and efficient manner, this is rigid body kinematics.
+For kinematics use the Euler represnetation as its consise and simpel and is videly used in the navigation of ships. For AUVs its more quarternion based that dominates, hwoever since we are doing only mapping euler will work as our dornes will not be maneuvering all the way. 
+Even if euler angles give singularities by deciding how to repensent euler angles smrtly in standard navigation way ie NED represnetation, we can forego using quarternions wich in tehmeselves have their own cavieates. 
+Never teh less we will still be using Quarternions as some sensors give our quarternions and some algorithms work better with quarternion reprensetation, because of that it is usefull to know how to handdle tem as well.
+Lastly we will have SO3 and SE3 groups as the SLAM map is built using SE3 represnetation, witch is an effective way of builing Envoroemnt over large data sets and works well with rendering as it is also used a lot in computer graphics. So Lie Grpups must be dicussed here as well 
+
+States = [pose, linear velocity, angle]
+
+Introduction
+Kinematics 
+- euler
+- quarternion
+- lie groups, SO(3) and SE(3)
+AUV modelling
+- Motion f()
+- Measurents h()
+ASV modelling
+- Motion f()
+- Measurents h()
+

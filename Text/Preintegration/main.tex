@@ -1,1 +1,9 @@
 \section{Preintegration}
+
+Uses motion model f() here I think
+
+For SLAM update step when a SOnar picture is made it usually takes 10 seconds or more, in this time span if we fed State estimate data directly into the optimizer we would generate hundreds of odometry factors that are useless as they are ujust connected to each other for the most part until new sonar image has been generated. This woudl mean optimizer part in the backend would have to sift and optimize for unecesarry hundreds of factors that dont contribute much by tehmselves.
+
+Instead what smart peokle have figured out is that one can do method called preintegration where you use smart ways to sum up all the inertial mesurments to create 1 signle precice odometry factor that gets generated at the same time as the sonar pictre is fiched generating, so that we get a single odometry factor that can be conected with multiple landmark factors. This is significatly faster as now only the escential data is compressed withouth wasting optimizers time as well as still relaying all teh importnat information. Preintegration is therefore crucial step to making SLAM efficient
+
+Alos talk about how odometry factors are generated here
