@@ -30,9 +30,10 @@
 \endgroup
 \newpage
 
-% Generate Acronym table
+% Generate Acronym table and include all main glossary entries even if unused
 \printglossary[type=\acronymtype, style=acronymStyle]
-\printglossary \clearpage
+\printglossary 
+\glsaddallunused[\acronymtype] \clearpage
 
 % Main meat n potaters of the report
 \input{Text/Introduction/main.tex} \clearpage
