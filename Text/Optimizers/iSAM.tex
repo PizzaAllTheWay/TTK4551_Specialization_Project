@@ -1,6 +1,6 @@
 \subsection{iSAM}
 \subsubsection{Getting to SLAM update step}
-Before we can compute a good estimate, we need a simple model of how the robot moves and how sensors observe the world. We use a motion model for state evolution and a measurement model for sensor readings. States are $x_i$ (robot poses), controls are $u_i$, and measurements $z_k$ (landmarks). We stack all unknowns into $\theta$ (poses and landmarks).
+Before computing a good estimate, defining simple models for robot motion and sensor observations is crucial. The motion model describes state evolution, and the measurement model describes sensor readings. States are $x_i$ for robot poses, controls are $u_i$, and measurements are $z_k$ for landmarks. Stack all unknowns into $\theta$, poses and landmarks.
 \\ \\
 Motion (process) model:
 $$
@@ -9,7 +9,7 @@ $$
         w_i \sim N(0, Q_i) \qquad
     \end{aligned}
 $$
-Given the previous state $x_{i-1}$ and control $u_i$, the next state $x_i$ comes from a model $f$ plus uncertainty noise in the model itself $w_i$. This uncertainty captures things like currents, slip, and actuator errors. $f_i$ can be a discrete time dynamics update or use plain odometry. Assuming Gaussian $w_i$ is a handy start so MAP becomes least squares. Later we can switch uncertainty model to robust or heavy tailed noise if needed.
+Given the previous state $x_{i-1}$ and control $u_i$, the next state $x_i$ comes from a model $f$ plus uncertainty noise in the model itself $w_i$. This uncertainty captures things like currents, slip, and actuator errors. $f_i$ can be a discrete time dynamics update or use plain odometry. Assuming Gaussian $w_i$ is a handy start so MAP becomes least squares. Later this uncertainty model can be switched to robust or heavy tailed noise model if needed.
 \\ \\
 Measurement model:
 $$
@@ -18,7 +18,7 @@ $$
         v_k \sim N(0, R_k) \qquad
     \end{aligned}
 $$
-Each measurement $z_k$ depends on state $x_{i_k}$ and landmarks $l_{j_k}$ transformed using measurement transform function $h_{k}(\cdot)$, this allows state estimate to become estimated measurement position. In addition this measurement has noise $v_k$ witch we model ad Gaussian noise for simplifications later on when calculating.
+Each measurement $z_k$ depends on state $x_{i_k}$ and landmarks $l_{j_k}$ transformed using measurement transform function $h_{k}(\cdot)$, this allows state estimate to become estimated measurement position. In addition this measurement has noise $v_k$ witch is modeled as Gaussian noise for simplifications later on when calculating.
 \\ \\
 Prior:
 $$
@@ -28,11 +28,11 @@ $$
 $$
 A prior anchors the graph (otherwise the problem is underdetermined up to a global transform). It can encode GPS at the start, a known dock pose, or simply a weak ``zero'' prior to fix gauge.
 \\ \\
-We want our predictions to match measurements. In a perfect world, every residual (prediction minus measurement) would be zero. In reality we have model errors and sensor noise, so residuals are nonzero. Estimation is about choosing the state update that makes all residuals as small and as statistically consistent as possible.
+Predictions should match measurements. In a perfect world, every residual (prediction minus measurement) would be zero. In practice, model errors and sensor noise make the residuals nonzero. Estimation is about choosing the state update that makes all residuals as small and as statistically consistent as possible.
 \\ \\
 This is where MAP algorithm comes in. MAP (Maximum A Posteriori) is the principled way to fuse everything we know. A prior on the state, the motion model, and all measurements. It combines them through probability, weighting each residual by its uncertainty. With Gaussian noise, the negative log posterior becomes a sum of squared (weighted) residuals. That gives us a single objective to minimize, where more reliable terms (small covariance) count more. This is better than ad hoc weighting and naturally handles many sensors.
 \\ \\
-Our motion and measurement functions are nonlinear (angles, rotations, ranges). Minimizing the nonlinear MAP cost directly is hard. Linearization lets us solve it iteratively. At the current estimate we approximate the nonlinear functions by their first order Taylor expansion, solve a linear least squares problem for a small increment, update the estimate, and repeat. This is all shown in the iSAM paper \cite{iSAM_paper} where linearized forms of our system becomes:
+Motion and measurement functions are nonlinear (angles, rotations, ranges). Minimizing the nonlinear MAP cost directly is hard. Linearization lets us solve it iteratively. At the current estimate approximate the nonlinear functions by their first order Taylor expansion, solve a linear least squares problem for a small increment, update the estimate, and repeat. This is all shown in the iSAM paper \cite{iSAM_paper} where linearized forms of the system becomes:
 \begin{equation}
     \begin{aligned}
         f_{i}(x_{i-1}, u_i) - x_i \approx (F_{i}^{i-1}\Delta x_{i-1} - \Delta x_{i}) - a_i \\
@@ -65,7 +65,7 @@ r_k^{\text{meas}}=H_k^{\,i_k}\Delta x_{i_k}+J_k^{\,j_k}\Delta l_{j_k}-c_k,
 $$
 with $H$ and $J$ the measurement Jacobians with respect to the involved pose and landmark, and $c_k$ the corresponding prediction error.
 \\ \\
-Each residual is measured with a Mahalanobis norm $\|r\|_{\Sigma}^2 := r^\top \Sigma^{-1} r$, using its own covariance, $\Lambda_i$ for odometry and $\Gamma_k$ for measurements. This matters because Mahalanobis distance ``bakes in'' uncertainty. Directions the sensor is confident about are penalized more. Noisy or correlated directions are penalized less, and the metric tilts along correlated axes. As a result, we judge errors not in plain Euclidean meters/radians but in ``standard-deviation units'' tailored to each factor.. Intuitively, this turns ``Euclidean space + covariance'' into Mahalanobis space, where the residual ellipses already encode the right weighting. That is why the covariance symbols appear inside the cost, uncertainty is not ignored, it's embedded in how distance is measured. With this, the whole objective of equation \eqref{eq:optimizer-iSAM-delta-theta-star-mahalanobis-form} is just ``add up all these linearized residuals, each judged fairly in its own noise units, and pick the $\Delta\theta^{*}$ that makes the total smallest''. Intuitively, we can think of each factor as a spring pulling on the variables. Mahalanobis scaling makes the springs stiff along low noise directions and soft along high noise ones, so the solution balances all pulls by their reliability.
+Each residual is measured with a Mahalanobis norm $\|r\|_{\Sigma}^2 := r^\top \Sigma^{-1} r$, using its own covariance, $\Lambda_i$ for odometry and $\Gamma_k$ for measurements. This matters because Mahalanobis distance ``bakes in'' uncertainty. Directions the sensor is confident about are penalized more. Noisy or correlated directions are penalized less, and the metric tilts along correlated axes. As a result, the errors are not judged in plain Euclidean meters/radians but in ``standard-deviation units'' tailored to each factor. Intuitively, this turns ``Euclidean space + covariance'' into Mahalanobis space, where the residual ellipses already encode the right weighting. That is why the covariance symbols appear inside the cost, uncertainty is not ignored, it's embedded in how distance is measured. With this, the whole objective of equation \eqref{eq:optimizer-iSAM-delta-theta-star-mahalanobis-form} is just ``add up all these linearized residuals, each judged fairly in its own noise units, and pick the $\Delta\theta^{*}$ that makes the total smallest''. Intuitively, factor can be visualized as spring pulling on the variables. Mahalanobis scaling makes the springs stiff along low noise directions and soft along high noise ones, so the solution balances all pulls by their reliability.
 \\ \\
 Collecting all linearized factors with their covariances, the MAP update $\Delta\theta^{*}$ is obtained by minimizing the following Mahalanobis-weighted least-squares objective:
 \begin{equation}
@@ -85,9 +85,9 @@ Collecting all linearized factors with their covariances, the MAP update $\Delta
     \label{fig:mahalanobis-distance}
 \end{figure}
 \noindent
-Mahalanobis distance is just ``error measured in the units of its noise'' (See Figure \ref{fig:mahalanobis-distance}). If a residual has high variance, we shouldn't punish it as much, if two components are correlated, we shouldn't treat them as independent. That's what the covariance does. In the left plot (Euclidean), all directions are weighted equally so the inlier region is a circle. In the right plot (Mahalanobis), directions with low uncertainty are tighter and correlated axes tilt the ellipse. In our SLAM cost, each residual (process or measurement) is evaluated with its own covariance. Small reliable noises count more, whilst large noisy ones count less. When two parts of a measurement drift together, their error isn't along x or y alone, it's along some tilted direction. Mahalanobis tilts the ``penalty shape'' to match that direction. We are punished less along noisy directions and more where the sensor is precise.
+Mahalanobis distance is just ``error measured in the units of its noise'' (See Figure \ref{fig:mahalanobis-distance}). If a residual has high variance, it should be penalized less. If two components are correlated, they should not be treated as independent. That's what the covariance does. In the left plot (Euclidean), all directions are weighted equally so the inlier region is a circle. In the right plot (Mahalanobis), directions with low uncertainty are tighter and correlated axes tilt the ellipse. In SLAM cost function, each residual (process or measurement) is evaluated with its own covariance. Small reliable noises count more, whilst large noisy ones count less. When two parts of a measurement drift together, their error isn't along x or y alone, it's along some tilted direction. Mahalanobis tilts the ``penalty shape'' to match that direction. Penalties are smaller along noisy directions and larger where the sensor data is precise.
 \\ \\
-Equation \eqref{eq:optimizer-iSAM-delta-theta-star-mahalanobis-form} is a sum of Mahalanobis residuals (process terms use $\Lambda_i$, measurement terms use $\Gamma_k$). To turn that into one clean least squares system, we ``whiten'' each residual so its noise is unit, for scalars divide by the standard deviation, for vectors apply the covariance's square root inverse to the residual and its Jacobians $\Sigma^{-1}$. After whitening, all errors are ordinary Euclidean ones, so we drop the covariance symbols, stack the Jacobians into one big sparse matrix $A$, stack the prediction errors into $b$, and solve the standard least squares problem \eqref{eq:optimizer-iSAM-delta-theta-star}.
+Equation \eqref{eq:optimizer-iSAM-delta-theta-star-mahalanobis-form} is a sum of Mahalanobis residuals (process terms use $\Lambda_i$, measurement terms use $\Gamma_k$). To turn that into one clean least squares system, first step is to ``whiten'' each residual so its noise is unit, for scalars divide by the standard deviation, for vectors apply the covariance's square root inverse to the residual and its Jacobians $\Sigma^{-1}$. After whitening, all errors are ordinary Euclidean ones, so the covariance symbols can be dropped, stack the Jacobians into one big sparse matrix $A$, stack the prediction errors into $b$, and solve the standard least squares problem \eqref{eq:optimizer-iSAM-delta-theta-star}.
 \begin{equation}
     \Delta\theta^\star = \arg\min_{\Delta\theta}\; \|A\Delta\theta - b\|^2
     \label{eq:optimizer-iSAM-delta-theta-star}
@@ -106,7 +106,7 @@ $$
 
 
 \subsubsection{Incremental QR for fast updates (iSAM)}
-We solve the linearized SLAM subproblem by least squares. Solving the normal equations $(A^\top A)\Delta\theta = A^\top b$ with Cholesky can be fast but very unstable and ill conditioned as the problem grows (it squares the condition number and increases fill in). iSAM avoids this by working directly with the whitened Jacobian $A$ using QR factorization, and by updating that factorization incrementally when new factors arrive.
+The linearized SLAM subproblem is solved by least squares. Solving the normal equations $(A^\top A)\Delta\theta = A^\top b$ with Cholesky can be fast but very unstable and ill conditioned as the problem grows (it squares the condition number and increases fill in). iSAM avoids this by working directly with the whitened Jacobian $A$ using QR factorization, and by updating that factorization incrementally when new factors arrive.
 \\ \\
 Batch square root form (QR on the Jacobian) can be shown in iSAM paper \cite{iSAM_paper} to be of form:
 
@@ -133,7 +133,7 @@ $$
 $$
 
 \noindent
-The iSAM paper \cite{iSAM_paper} shows that after QR we have:
+The iSAM paper \cite{iSAM_paper} shows that after QR the equation is:
 $$
     A\Delta\theta - b \;=\;
     \begin{bmatrix} R \\ 0 \end{bmatrix}\Delta\theta -
@@ -142,7 +142,7 @@ $$
     \|A\Delta\theta - b\|^2 = \|R\Delta\theta - d\|^2 + \|e\|^2.
 $$
 \noindent
-Put simply, once we do QR, the error splits into two parts. To make the total error as small as possible, we make the first part zero by solving:
+Put simply, once QR factorization is performed, the error splits into two parts. To make the total error as small as possible, set the first term to zero and solve:
 \begin{equation}
     R\Delta\theta^\star = d
     \label{eq:optimizer-iSAM-fast-solution}
@@ -151,7 +151,7 @@ Put simply, once we do QR, the error splits into two parts. To make the total er
 \noindent
 leaving $\|e\|^2$ as the (minimal) residual norm. If $R$ has full rank, this linearized system has one singular unique solution $\Delta\theta^\star$.
 \\ \\
-In iSAM the matrix $R$ is upper triangular, so we solve equation (\ref{eq:optimizer-iSAM-fast-solution}) by back substitution (no matrix inverse). This gives a fast, numerically stable way to compute the correction and update the state $\theta \leftarrow \theta + \Delta\theta^\star$ without heavy compute.
+In iSAM the matrix $R$ is upper triangular, so equation (\ref{eq:optimizer-iSAM-fast-solution}) is solved by back substitution (no matrix inverse). This gives a fast, numerically stable way to compute the correction and update the state $\theta \leftarrow \theta + \Delta\theta^\star$ without heavy compute.
 
 
 
@@ -161,16 +161,15 @@ $$
 R^\top R \;=\; A^\top A .
 $$
 This means $A^\top A$ (the information matrix obtained by linearization) is represented by the ``square root'' $R$. Working with $R$ keeps all the curvature of the problem but in a form that is easier to use and numerically safer because $R$ is upper triangular, so computations reduce to cheap substitution methods instead of expensive matrix inverses. Uncertainty can also be extracted directly from $R$. The state covariance is given by:
-
 $$
 \Sigma \;=\; (A^\top A)^{-1} \;=\; (R^\top R)^{-1},
 $$
-We never build a dense inverse. When we need entries of the uncertainty $\Sigma$, we solve small triangular systems with $R^\top$ and $R$ and read only the pose and pose to landmark blocks we care about. Since $R$ is sparse and triangular, this is fast and stable, and we avoid forming $A^\top A$. (See  \ref{sssec:iSAM-data-association} \nameref{sssec:iSAM-data-association})
+A dense inverse is never built. In reality, when entries of the uncertainty $\Sigma$ are needed, solve small triangular systems with $R^\top$ and $R$, and read only the pose blocks and the pose to landmark blocks of interest. Since $R$ is sparse and triangular, this is fast and stable, and it avoids forming $A^\top A$. (See \ref{sssec:iSAM-data-association} \nameref{sssec:iSAM-data-association})
 
 
 
 \subsubsection{Matrix Factorization for building QR (Givens rotations)}
-We use \emph{Givens rotations} to build an upper triangular factor $R$ from the (whitened) Jacobian $A$ by zeroing entries below the diagonal, one at a time. This yields a QR factorization without forming $A^\top A$ and without explicitly storing $Q$.
+Here \emph{Givens rotations} is used to build an upper triangular factor $R$ from the (whitened) Jacobian $A$ by zeroing entries below the diagonal, one at a time. This yields a QR factorization without forming $A^\top A$ and without explicitly storing $Q$.
 \\ \\
 A Givens rotation is a $2\times 2$ orthogonal transform applied to two rows (or two columns) to annihilate one chosen entry. Givens rotation matrix is defined as:
 \begin{equation}
@@ -183,7 +182,7 @@ A Givens rotation is a $2\times 2$ orthogonal transform applied to two rows (or 
 \end{equation}
 Start at the leftmost non zero column of the $A$ matrix and sweep to the right, one column at a time. In each column, pick two rows, \textit{``k''} (the current pivot row) and \textit{``i''} (a row below it), and apply the small ``rotate and combine'' equation (\ref{eq:optimizer-iSAM-givens-rotation}) so the entry under the diagonal in that column becomes zero. Only those two rows are mixed, the new row \textit{``k''} becomes a bit of the old row \textit{``k''} plus a bit of row \textit{``i''}, and the new row \textit{``i''} becomes a bit of the old row \textit{``i''} minus a bit of row \textit{``k''}. Repeat down the column until all subdiagonal entries are gone, then move to the next column on the right. (see Figure \ref{fig:givens-rotation} down bellow for a visual of one Givens step)
 \\ \\
-As we sweep the columns of $A$, the matrix is transformed into an upper triangular form, this is $R$ and we never need to build the full $Q$. Apply the same row rotations to $b$ as you eliminate entries so the right hand side stays consistent. After the initial factorization of $A$ matrix, new measurements don't require rebuilding $A$. We will illustrate later that we can just append the new (whitened) rows under the current $R$ and apply a short sequence of the same row rotations to re triangularize $R$ matrix again. In other words, updates operate directly on $R$ (and $b$), we bypass $A$ entirely for incremental steps.
+As the algorithm sweeps the columns of $A$, the matrix is transformed into the upper triangular form, this is $R$, and the full $Q$ doesn't need to be formed to get to the result. Apply the same row rotations to $b$ as you eliminate entries so the right hand side stays consistent. After the initial factorization of $A$ matrix, new measurements don't require rebuilding $A$. Later it is shown that new whitened rows can be appended beneath the current $R$, then a short sequence of row rotations re-triangularizes $R$. In other words, updates operate directly on $R$ and $b$, and $A$ is bypassed for incremental steps.
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.9\linewidth]{Pictures/Optimizers/iSAM/Givens_Rotations.png}
@@ -191,7 +190,7 @@ As we sweep the columns of $A$, the matrix is transformed into an upper triangul
     \label{fig:givens-rotation}
 \end{figure}
 \noindent
-In order to make $R$ upper triangular, we need to get perfect $\varphi$ value to zero a single sub diagonal entry in preliminary matrix, either be it $A$ matrix on batch step or $R$ matrix on iterative steps. we choose a rotation angle $\varphi$ from the two numbers we want to combine in the current column, the pivot $x=a_{kk}$ and the subdiagonal $y=a_{ik}$.
+In order to make $R$ upper triangular, $\varphi$ value must be chosen precisely to zero out a single sub diagonal entry in preliminary matrix, either be it $A$ matrix on batch step or $R$ matrix on iterative steps. The rotation angle $\varphi$ is computed from the two entries in the current column, the pivot $x=a_{kk}$ and the subdiagonal $y=a_{ik}$.
 $$
     \begin{aligned}
         r=\sqrt{x^2+y^2}=\sqrt{a_{kk}^2+a_{ik}^2} \\
@@ -199,7 +198,7 @@ $$
         s=\sin\varphi=\frac{y}{r}=\frac{a_{ik}}{r} 
     \end{aligned}
 $$
-Solving for $\varphi$ gives us the following answer, where $\alpha = x = a_{kk}$ and $\beta = y = a_{ik}$:
+Solving for $\varphi$ gives the following answer, where $\alpha = x = a_{kk}$ and $\beta = y = a_{ik}$:
 \begin{equation}
     (\cos\varphi,\ \sin\varphi)=
     \begin{cases}
@@ -210,7 +209,9 @@ Solving for $\varphi$ gives us the following answer, where $\alpha = x = a_{kk}$
     \qquad\text{with }\ \alpha:=a_{kk},\ \beta:=a_{ik}.
     \label{eq:optimizer-iSAM-givens-rotation-find-phi}
 \end{equation}
-These coefficients in equation \eqref{eq:optimizer-iSAM-givens-rotation-find-phi} give the same rotation as \eqref{eq:optimizer-iSAM-givens-rotation}. They guarantee the $(i,k)$ entry in the working matrix becomes zero, and they do it without changing lengths first for the two number pair $[x,\,y]^\top$ we rotate, and, when embedded, for the affected parts of the two rows (and the matching entries of $b$). In practice, embed $G_{(i,k)}(\varphi)$ so it acts only on rows $k$ and $i$, and apply the same rotation to $b$ to keep the least squares system consistent.
+These coefficients in equation \eqref{eq:optimizer-iSAM-givens-rotation-find-phi} give the same rotation as \eqref{eq:optimizer-iSAM-givens-rotation}. 
+
+Givens rotations guarantee that the $(i,k)$ entry of the working matrix becomes zero, and they preserve lengths. First the two numbers $[x,\,y]^\top$ are rotated. When embedded in the full matrix, the same rotation is applied to the affected parts of the two rows and to the matching entries of $b$. In practice, embed $G_{(i,k)}(\varphi)$ so it acts only on rows $k$ and $i$, and apply the same rotation to $b$ to keep the least squares system consistent.
 
 
 
@@ -222,24 +223,24 @@ These coefficients in equation \eqref{eq:optimizer-iSAM-givens-rotation-find-phi
     \label{fig:R-matrix-update-step}
 \end{figure}
 \noindent
-After the initial QR factorization, we maintain the solution in ``square root'' form, an upper triangular matrix $R$ and a transformed right hand side $d$. Here, $R$ is the triangular factor that satisfies $R^\top R = A^\top A$ (the Gauss Newton information), and $d$ is the top part of $Q^\top b$. When a new measurement arrives, we first whiten it (divide by its standard deviation or apply the square root information of its covariance) so it has unit variance. The whitened measurement contributes a new row $w^\top$ to the Jacobian and a new scalar $\gamma$ to the RHS (Right Hand Side). Notice that we do NOT rebuild $A$. Instead, we append $w^\top$ under the current $R$, and $\gamma$ under the current $d$, which produces a system that is ``almost'' triangular but has one non triangular row at the bottom.
+After the initial QR factorization, maintain the solution in ``square root'' form, an upper triangular matrix $R$ and a transformed right hand side $d$. Here, $R$ is the triangular factor that satisfies $R^\top R = A^\top A$ (the Gauss Newton information), and $d$ is the top part of $Q^\top b$. When a new measurement arrives, first whiten it (divide by its standard deviation or apply the square root information of its covariance) so it has unit variance. The whitened measurement contributes a new row $w^\top$ to the Jacobian and a new scalar $\gamma$ to the RHS (Right Hand Side). Notice that $A$ is NOT rebuild. Instead, append $w^\top$ under the current $R$, and $\gamma$ under the current $d$, which produces a system that is ``almost'' triangular but has one non triangular row at the bottom.
 $$
     R' = \begin{bmatrix} R\\ w^\top \end{bmatrix},\qquad
     d' = \begin{bmatrix} d\\ \gamma \end{bmatrix}
 $$
-Next, we re-triangularize locally with Givens rotations \eqref{eq:optimizer-iSAM-givens-rotation}. We only touch the columns where the new whitened Jacobian row $w^\top$ has nonzeros (i.e, the variables that this new factor actually connects to, such as a pose $x_i$ or a landmark $l_j$). Starting from the leftmost such column, each rotation mixes the current pivot row with the new bottom row to kill one sub diagonal entry. We repeat until the entire bottom row is zero and the matrix is upper triangular again. The equation would look something like this:
+Next, re-triangularize locally with Givens rotations \eqref{eq:optimizer-iSAM-givens-rotation}. Only touching the columns where the new whitened Jacobian row $w^\top$ has nonzeros (i.e, the variables that this new factor actually connects to, such as a pose $x_i$ or a landmark $l_j$). Starting from the leftmost such column, each rotation mixes the current pivot row with the new bottom row to kill one sub diagonal entry. Repeat the process until the entire bottom row is zero and the matrix is upper triangular again. The equation would look something like this:
 $$
     \begin{bmatrix} R\\ w^\top \end{bmatrix}
     \ \xrightarrow{\ \text{Givens rotation on affected columns}\ }\ 
     \begin{bmatrix} R'\\ 0 \end{bmatrix}
 $$
-While we rotate the matrix, we apply the same rotations to the right hand side so that the least squares system stays consistent. Here $d$ is the transformed RHS (Right Hand Side) before the update and $\gamma$ is the new whitened RHS entry that pairs with $w^\top$. After the rotations, the top block becomes the updated RHS $d'$ used for solving, and the final bottom entry becomes a small leftover error $e_{\text{new}}$ that adds to the total residual. 
+While the matrix is rotates, apply the same rotations to the right hand side so that the least squares system stays consistent. Here $d$ is the transformed RHS (Right Hand Side) before the update and $\gamma$ is the new whitened RHS entry that pairs with $w^\top$. After the rotations, the top block becomes the updated RHS $d'$ used for solving, and the final bottom entry becomes a small leftover error $e_{\text{new}}$ that adds to the total residual. 
 $$
     \begin{bmatrix} d\\ \gamma \end{bmatrix}
     \ \xrightarrow{\ \text{same rotations}\ }\ 
     \begin{bmatrix} d'\\ e_{\text{new}} \end{bmatrix}
 $$
-Intuitively, the new row $w^\top$ is ``folded up'' into the triangular structure by a short chain of 2x2 rotations that only touch the connected variables, everything else is left alone. We then get the correction by a fast back substitution on the updated matrix $R'$ and vector $d'$:
+Intuitively, the new row $w^\top$ is ``folded up'' into the triangular structure by a short chain of 2x2 rotations that only touch the connected variables, everything else is left alone. Then get the correction by a fast back substitution on the updated matrix $R'$ and vector $d'$:
 $$
     R'\Delta\theta^\star = d'
 $$
@@ -285,23 +286,23 @@ $$
     \label{fig:variable-reordering}
 \end{figure}
 \noindent
-Loop closures tie together far-apart parts of the trajectory (and landmarks), which makes previously separate columns interact. In QR terms this creates fill-in, R gets extra non zeros, so updates, back substitution, and selected covariance queries get slower and memory grows. We fix this by variable reordering. What we do is pick a new elimination order that preserves sparsity. In practice we run a heuristic like COLAMD (Column Approximate Minimum Degree) (often the block version for pose/landmark blocks) on the Jacobian's sparsity matrix $A$, then do batch factorization on the whole $A$ matrix using rotations \eqref{eq:optimizer-iSAM-givens-rotation} with that order \cite{iSAM_paper}. Reordering costs time because we rebuild the factor with a new permutation, but it pays back by making the next many updates cheap again.
+Loop closures tie together far-apart parts of the trajectory (and landmarks), which makes previously separate columns interact. In QR terms this creates fill-in, R gets extra non zeros, so updates, back substitution, and selected covariance queries get slower and memory grows. This can be fixed by variable reordering. The goal is to pick a new elimination order that preserves sparsity. In practice run a heuristic like COLAMD (Column Approximate Minimum Degree) (often the block version for pose/landmark blocks) on the Jacobian's sparsity matrix $A$, then do batch factorization on the whole $A$ matrix using rotations \eqref{eq:optimizer-iSAM-givens-rotation} with that order \cite{iSAM_paper}. Reordering costs time because the factor must be rebuilt with a new permutation, but it pays back by making subsequent updates cheap again.
 \\ \\
-Because reordering is expensive, we don't do it every step. Instead we do periodic reorder every N steps (eks, 50 - 200) so cost stays predictable. In marine AUV runs this keeps compute bounded. Between reorders incremental updates are fast and local. After a loop closure, we accept one spike (reorder + refactor), then return to low latency. Practical tips when doing this step is to keep poses as blocks (block COLAMD) to reduce fill-in, align reordering with planned relinearization passes, and monitor simple stats (nonzeros in R, update time) to decide when N is too small (wasting time reordering) or too large (letting fill in snowball).  
+Because reordering is expensive, it is not done at every step. Instead, reordering is performed periodically every N steps (eks, 50 - 200) so the cost stays predictable. In marine AUV and ASV runs this keeps compute bounded. Between reorders incremental updates are fast and local. After a loop closure, one spike occurs (reorder + refactor), then the system returns to low latency. Practical tips when doing this step is to keep poses as blocks (block COLAMD) to reduce fill-in, align reordering with planned relinearization passes, and monitor simple stats (nonzeros in R, update time) to decide when N is too small (wasting time reordering) or too large (letting fill in snowball).  
 
 
 
 \subsubsection{Re-Linearization}
-Re-linearization keeps the local model honest. All the QR/update tricks we have gone through now assume the system is locally linear around the current estimate, but with angles, 3D motion, and nonlinear sensors that linearization drifts as the robot moves. If we never refresh it, increments stop being small, the optimizer biases the map, and loop closures can break the solution. The fix is to re-linearize, recompute Jacobians at the current state for the factors that matter. Doing this for every factor at every step is too expensive, so in practice we always linearize new factors (fresh odometry and measurements) and refresh older ones only when needed.
+Re-linearization keeps the local model valid. The QR and update methods assume the system is locally linear around the current estimate, but with angles, three dimensional motion, and nonlinear sensor data, that approximation drifts as the robot moves. If it is not refreshed, increments grow, the optimizer biases the map, and loop closures can fail. The remedy is to re-linearize and recompute Jacobians at the current state for the factors that matter. Doing this for every factor at every step is too expensive, so in practice new factors are always linearized, and older ones are refreshed only when needed.
 \\ \\
-In iSAM the practical schedule is to perform incremental updates between maintenance cycles, then do a full re-linearization at a fixed interval N. Between cycles we do not re-linearize old factors, we only whiten and insert the new ones and update $R$ incrementally. At the cycle boundary when we hit N steps, we re-linearize the entire problem at the current estimate (conceptually rebuild the full Jacobian $A$), run a variable reordering to restore sparsity using COLAMD, and refactor using equation \eqref{eq:optimizer-iSAM-givens-rotation} to get a fresh triangular $R$. Thats why we usually bunch variable reordering with batch linearization in the same N step. 
+In iSAM the practical schedule is to run incremental updates between maintenance cycles, then perform a full re-linearization every N steps. Between cycles, old factors are not re-linearized, new factors are whitened and inserted, and $R$ is updated incrementally. At the cycle boundary after N steps, the entire problem is re-linearized at the current estimate, the full Jacobian $A$ is rebuilt conceptually, variables are reordered with COLAMD to restore sparsity, and the system is refactored using equation \eqref{eq:optimizer-iSAM-givens-rotation} to obtain a fresh triangular $R$. For this reason variable reordering is usually grouped with batch re-linearization at the same N step.
 \\ \\
-We must choose $N$ carefully, by balancing freshness vs compute. If N is too large, the linearization point drifts far from reality, Jacobians no longer match the true geometry, corrections become biased, loop closures pull hard, and the map can warp (a classic ``stale linearization'' issue). If N is too small, we keep stopping to relinearize and refactor, burning CPU and power and hurting real-time throughput.
+$N$ must be chosen carefully, by balancing freshness vs compute. If N is too large, the linearization point drifts far from reality, Jacobians no longer match the true geometry, corrections become biased, loop closures pull hard, and the map can warp (a classic ``stale linearization'' issue). If $N$ is too small, the system stops often to re-linearize and refactor, wasting CPU and power, and reducing real-time throughput.
 
 
 
 \subsubsection{Data Association from R}\label{sssec:iSAM-data-association}
-For data association we often use a Mahalanobis based approach instead of plain nearest neighbour Approach. Nearest neighbour measures raw Euclidean distance and ignores sensor noise and correlations. Mahalanobis measures the innovation in the units of its uncertainty, so noisy directions count less, precise directions count more, and correlated components are handled correctly (See Figure \ref{fig:mahalanobis-distance}). For a candidate match between current pose $x_i$ and landmark $l_j$, form the innovation $\nu_k$ and score:
+For data association, Mahalanobis based approach is often used instead of plain nearest neighbour Approach. Nearest neighbour measures raw Euclidean distance and ignores sensor noise and correlations. Mahalanobis measures the innovation in the units of its uncertainty, so noisy directions count less, precise directions count more, and correlated components are handled correctly (See Figure \ref{fig:mahalanobis-distance}). For a candidate match between current pose $x_i$ and landmark $l_j$, form the innovation $\nu_k$ and score:
 $$
     d_k^2=\nu_k^\top\,\Xi_k^{-1}\,\nu_k,\qquad
     \Xi_k=J_k\,\Sigma\,J_k^\top+\Gamma_k
@@ -309,7 +310,7 @@ $$
 \noindent
 where $J_k=[\,H^{x_i}\ \ H^{l_j}\,]$ is the linearized measurement Jacobian, $\Gamma_k$ is the sensor noise, and $\Sigma$ is the state covariance. 
 \\ \\
-This type of data association often uses gating with a chi-square test. The test keeps matches that are within $d_k^2\le \chi^2_{m,\alpha}$ (right dimension $m$, chosen confidence $\alpha$). From the survivors, we pick the ``minimum cost'' one (or solve a global assignment using $d_{ij}^2$ as the cost matrix if several features compete). One thing to note about this approach is that we don't need the full dense $\Sigma=(R^\top R)^{-1}$ to do our data association, we only require local covariances touched by the measurement. These types of covariances can be pull directly from the square root information matrix $R$. Here we can get pose, and pose to landmark terms are available live. Landmark terms on the other hand are either a approximate fast conservative estimate or computed exactly on demand. This keeps the association real-time for the most part.
+This type of data association often uses gating with a chi-square test. The test keeps matches that are within $d_k^2\le \chi^2_{m,\alpha}$ (right dimension $m$, chosen confidence $\alpha$). From the survivors, pick the ``minimum cost'' one (or solve a global assignment using $d_{ij}^2$ as the cost matrix if several features compete). One thing to note about this approach is that the full dense $\Sigma=(R^\top R)^{-1}$ is not required for data association, only the local covariances influenced by the measurement. These covariances can be extracted directly from the square root information matrix $R$. Pose blocks and pose to landmark blocks are available online as well. Landmark terms on the other hand are either a approximate fast conservative estimate or computed exactly on demand. This keeps the association real-time for the most part.
 Here are the partitioned forms.
 Full state covariance (poses vs. landmarks):
 $$
@@ -346,7 +347,7 @@ $$
 \Sigma_{x_i x_i} \;\; \text{(bottom–right block of } \Sigma)\qquad
 \Sigma_{l_j x_i}=\Sigma_{x_i l_j}^\top \;\; \text{for connected } l_j
 $$
-Intuitively we ``solve up'' then ``solve down'' on $R$ for the last pose, and we get exactly the columns of $\Sigma=(R^\top R)^{-1}$ that matter for gating in data association. This can be done every step without forming any dense inverses, only using $R$ square root information matrix iteratively. (See Figure \ref{fig:substitution-foward-backwards})
+Intuitively ``solve up'' then ``solve down'' on $R$ for the last pose, and get exactly the columns of $\Sigma=(R^\top R)^{-1}$ that matter for gating in data association. This can be done every step without forming any dense inverses, only using $R$ square root information matrix iteratively. (See Figure \ref{fig:substitution-foward-backwards})
 \begin{figure}[H]
   \centering
   \begin{subfigure}[t]{0.49\linewidth}
@@ -361,7 +362,7 @@ Intuitively we ``solve up'' then ``solve down'' on $R$ for the last pose, and we
     \caption{$R X = Y$ (back substitution). Sweep ``up'' the matrix to obtain the desired columns $X=\Sigma_{:\,,x_i}$ (pose and pose to landmark).}
     \label{fig:right}
   \end{subfigure}
-  \caption{We grab the needed covariances in two quick steps: first solve ``down'' with $R^\top$, then solve ``up'' with $R$. We only touch entries near the last pose block, so each update stays fast and cheap.\textsuperscript{\cite{iSAM_paper}}}
+  \caption{Grab the needed covariances in two quick steps: first solve ``down'' with $R^\top$, then solve ``up'' with $R$. Only touch entries near the last pose block, so each update stays fast and cheap.\textsuperscript{\cite{iSAM_paper}}}
   \label{fig:substitution-foward-backwards}
 \end{figure}
 \noindent
@@ -380,32 +381,32 @@ $$
 $$
 where $\bar J$ is the Jacobian of the local inverse measurement model, $\Sigma_{ii}$ is the current pose covariance, and $\Gamma$ is the measurement noise. This upper bounds landmark uncertainty (never over confident), is fast, and works well for online Mahalanobis gating. As more measurements of a landmark arrive, this bound typically tightens.
 \\ \\
-An important caveat to mention is that we usually don't know the true $\Gamma$ (measurement noise) exactly. The iSAM recipe is to choose $\Gamma$ conservatively so we don't get over confident. That keeps things safe but can make the gate too tight, causing the data association to reject more matches than it should. Later, we will discuss a more confident way to approximate $\Gamma$ from measurement characteristics without being overly confident (eks: range/resolution for sonar and landmark confidence) so the gate is realistic without being risky.
+An important caveat to mention is that the true $\Gamma$ (measurement noise) is usually unknown. The iSAM recipe is to choose $\Gamma$ conservatively so the algorithms doesn't get overly confident. That keeps things safe but can make the gate too tight, causing the data association to reject more matches than it should. Later, a more reliable way to approximate $\Gamma$ from measurement characteristics is described. It avoids overconfidence and uses cues such as sonar range and resolution and landmark confidence, so the gate is realistic and not risky.
 \\ \\
 \textbf{Exact landmark covariances (on demand)} 
 \\ \noindent
-When we need accuracy (eks: on risky loop closure, conflicting hypotheses), Data Association can recover exact $\Sigma_{jj}$ and $\Sigma_{(i-n)j}$ without forming the full dense inverse information matrix $\Sigma=(A^{T}A)^{-1}=(R^{T}R)^{-1}$. Because the covariance is the inverse of the information matrix:
+When accuracy is needed (eks: on risky loop closure, conflicting hypotheses), Data Association can recover exact $\Sigma_{jj}$ and $\Sigma_{(i-n)j}$ without forming the full dense inverse information matrix $\Sigma=(A^{T}A)^{-1}=(R^{T}R)^{-1}$. Because the covariance is the inverse of the information matrix:
 $$
     \Sigma=(R^\top R)^{-1}, \qquad R^\top R\,\Sigma = I
 $$
-We can get the needed entries without forming the full inverse by solving for two triangular matrixes:
+Needed entries can be extracted without forming the full inverse by solving for two triangular matrixes:
 $$
 R^\top Y = I, \qquad R \Sigma = Y
 $$
-We only follow the ``nonzeros'' of $R$ when solving. That means we don't touch the whole matrix, just the parts that matter. iSAM walks backwards along those non zero links and gives us exactly the covariance numbers $\sigma_{ij}$ Data Association ask for. If $R$ is mostly banded, this is near linear time. We should only use this exact method when we really need it (eks: a few $\Sigma_{jj}$ blocks to check on a loop closure). It's slower than the conservative shortcut, but still much faster than inverting the whole matrix.
+The solve uses only the ``nonzero'' entries of $R$, so computation touches only the parts that matter, not the whole matrix. iSAM walks backwards along those non zero links and gives us exactly the covariance numbers $\sigma_{ij}$ Data Association ask for. If $R$ is mostly banded, this is near linear time. This exact method should only be used when its really needed (eks: a few $\Sigma_{jj}$ blocks to check on a loop closure). It's slower than the conservative shortcut, but still much faster than inverting the whole matrix.
 \\ \\
 \textbf{Alternative way to finding $\Gamma$} 
 \\ \noindent
-There's another angle. Instead of being very conservative with our $\Gamma$ measurement noise. Uncertainty used in Data Association should reflect the sensor, for example a sonar for scanning the sea floor. With sonar we can make the measurement noise grow with range and use the transducer's resolution to set per axis variances $N(0, \Sigma_{sonar})$. The landmark detection can also contribute its own uncertainty $N(0, \Sigma_{landmark})$. In practice we could combine ``sensor noise'' and ``landmark estimate noise'' to get the prediction uncertainty for the residual we score. In that case we can say:
+There's another angle. Instead of being very conservative with $\Gamma$ measurement noise. Uncertainty used in Data Association should reflect the sensor, for example a sonar for scanning the sea floor. With sonar the measurement noise can grow with range, and the transducer resolution can set per axis variances $N(0, \Sigma_{sonar})$. The landmark detection can also contribute its own uncertainty $N(0, \Sigma_{landmark})$. In practice these are combined to form the prediction uncertainty for the residual that is scored. In that case the effective covariance is:
 $$
     \Gamma = Var(h(x, l)) = \Sigma_{sonar} + \Sigma_{landmark}
 $$
-This can be more informative than a one size fits all setting. However we must be very careful with this approach, if we make these noises too optimistic, the gate in Data Association gets too tight, associations become brittle, and the system can go unstable. Never the less this is a lot better approach for building more accurate maps and estimating robots track.
+This can be more informative than a one size fits all setting. However, this approach requires care. If the noise terms are too confident, the data association gate becomes too tight, matches become brittle, and the system can become unstable. Nevertheless, it often yields more accurate maps and a better estimate of the robot's track.
 
 
 
 \subsubsection{Algorithm}
-At each time step we absorb new information, linearize around the current estimate, solve a small least squares, and update. Periodically we refresh linearization and variable order. Concretely:
+At each time step absorb new information, linearize around the current estimate, solve a small least squares, and update. Periodically refresh linearization and variable order. Concretely:
 \begin{enumerate}
     \item \textbf{Add factors (whiten first):} take the new odometry/measurements and add them to the graph. ``Whiten”'' them so every residual has unit noise (as described before \eqref{eq:optimizer-iSAM-delta-theta-star}).
 
