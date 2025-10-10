@@ -13,10 +13,11 @@ Kinematics
 - euler
 - quarternion
 - lie groups, SO(3) and SE(3)
-AUV modelling
-- Motion f()
-- Measurents h()
 ASV modelling
-- Motion f()
-- Measurents h()
+- Motion f() => Use Tor Inge Fossens model THEN afterwards model IMU modelling
+   - Fossen: Best for dynamic simulation or model-based control | Requires known or estimated hydrodynamic parameters. | Good if you have accurate thruster/actuator models and environmental force estimation. | Poor choice if you only have IMU/GNSS — too many unobservable states.
+   - INS model: Directly tied to the IMU (which is your highest-rate motion sensor). | Works for any robot, ship, drone, etc. | Dynamics come “for free” from real IMU data — no need for hydrodynamic parameters. | Simple and robust for graph/UKF-based SLAM.
+   - Basically select good tool for the job you want to do, even though Fossen model is great, for our use case in SLAM a INS model will suffice, especially i combination with aiding measurements. Fossens is good but INS is simpler and in SLAM case for building a local map for Data Processing step it is more than god enough. like yes in this case Fossne might be more accurate if we had more system parameters that we know but then we would have to estimate system parameters, and for that we need system identification at that point. And then we have to consider is it worth doing full system identification for 1\% maybe more performance? SO jesjes INS model it is because of it.
+
+- Measurents h() for GNSS
 
