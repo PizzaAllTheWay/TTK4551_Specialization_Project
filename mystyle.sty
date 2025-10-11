@@ -12,6 +12,7 @@
 \usepackage{comment} % To comment out multiple lines of text
 \usepackage{graphicx} % For better graphics
 \usepackage[colorinlistoftodos]{todonotes} % Text highlight todo list \todo
+\usepackage{textcomp} % For degree and angle commands
 
 % Hyperlink library
 % Use PassOptionsToPackage to alight long hyperlinks/hypertexts
@@ -58,10 +59,12 @@
 \makeglossaries
 
 % better line breaking & hyphenation
-\usepackage[final]{microtype}
-\usepackage{xurl}                    % better URL breaks
-\emergencystretch=3em                % let TeX stretch lines a bit
-\hbadness=100000      % hide underfull hbox messages
+\usepackage[T1]{fontenc} % Use modern text font encoding  
+\usepackage{lmodern} % Load scalable Latin Modern fonts  
+\usepackage[final]{microtype} % Improve text spacing & justification  
+\usepackage{xurl} % better URL breaks
+\emergencystretch=3em % let TeX stretch lines a bit
+\hbadness=100000 % hide underfull hbox messages
 
 % Define path where we get pictures from
 \graphicspath{{Pictures/}}
