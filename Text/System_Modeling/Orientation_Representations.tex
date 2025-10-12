@@ -165,10 +165,6 @@ The main advantages of quaternions include their smooth and continuous represent
 
 
 
-\newpage
-
-
-
 \subsubsection{Lie Groups and Manifolds}
 Lie groups provide a mathematical framework for representing continuous and smooth transformations such as rotation and translation in three dimensional space. They combine the properties of algebraic groups and differentiable manifolds, allowing both analytical manipulation and geometric interpretation of motion. In navigation, control, and robotics, Lie groups enable consistent handling of orientation and pose without the discontinuities or ambiguities present in minimal representations such as Euler angles.  
 \\ \\
@@ -200,14 +196,16 @@ $$
 These two functions allow smooth transitions between local angular velocity representations and full 3D orientations, which is highly useful for filters and optimizers for SLAM.  
 \\ \\
 To include translation as well as rotation, the concept extends to $\mathrm{SE}(3)$, the so called Special Euclidean Group, which describes full 3D rigid body motion:
-$$
+\begin{equation}
     T =
     \begin{bmatrix}
         R & \mathbf{p} \\
         0 & 1
     \end{bmatrix},
-    \quad T \in \mathrm{SE}(3),
-$$
+    \quad T \in \mathrm{SE}(3)
+    \label{eq:SE3-definition}
+\end{equation}
+\noindent
 Here $R$ is orientation and $\mathbf{p}$ is position. This group provides a consistent mathematical way to represent a vehicles full pose and combine both rotational and translational motion.  
 \\ \\
 In robotics and navigation, $\mathrm{SO}(3)$ and $\mathrm{SE}(3)$ are used to describe smooth and continuous motion in three dimensional space. $\mathrm{SO}(3)$ represents pure rotations, while $\mathrm{SE}(3)$ extends this to include both rotation and translation, forming the full rigid body pose. These groups define motion directly on the manifold, ensuring mathematically consistent and globally valid transformations without singularities.  
