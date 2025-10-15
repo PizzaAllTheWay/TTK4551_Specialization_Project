@@ -103,7 +103,7 @@ The relationship between the global and local reference frames follows the trans
 $$
     \text{WGS84 (geodetic)} \;\rightarrow\; \text{ECEF (Cartesian)} \;\rightarrow\; \text{NED (local tangent)} \;\rightarrow\; \text{Body (vehicle-fixed)}
 $$
-GNSS receivers typically provide positions in the WGS84 frame, expressed as geodetic coordinates $(\varphi, \lambda, h)$, where $\varphi$ is latitude, $\lambda$ is longitude, and $h$ is altitude above the reference ellipsoid. For computational purposes, these coordinates are first converted to the ECEF frame, which represents positions in Cartesian coordinates $(x, y, z)$ relative to the Earth’s center of mass.  
+GNSS receivers typically provide positions in the WGS84 frame, expressed as geodetic coordinates $(\varphi, \lambda, h)$, where $\varphi$ is latitude, $\lambda$ is longitude, and $h$ is altitude above the reference ellipsoid. For computational purposes, these coordinates are first converted to the ECEF frame, which represents positions in Cartesian coordinates $(x, y, z)$ relative to the Earth's center of mass.  
 \\ \\
 To obtain a local navigation frame, the ECEF position is then rotated and translated into the NED frame, which defines a tangent plane fixed at a chosen reference point $(\varphi_0, \lambda_0)$. The rotation from ECEF to NED is given by
 $$
@@ -116,14 +116,20 @@ $$
 $$
 where $\varphi_0$ and $\lambda_0$ are the latitude and longitude of the local origin. The superscript $n$ and subscript $e$ indicate that this matrix transforms a vector expressed in the ECEF frame $\{e\}$ into the NED frame $\{n\}$.  
 \\ \\
-Given the ECEF position of the vehicle $\mathbf{p}_e^b$ and the ECEF position of the NED origin $\mathbf{p}_e^0$, the vehicles position in NED coordinates is computed as
+Given the ECEF position of the vehicle $\mathbf{p}_{b/e}^{e}$ and the ECEF position of the NED origin $\mathbf{p}_{O/e}^{e}$, the vehicles position in NED coordinates is computed as
 $$
-    \mathbf{p}_n^b = R_e^n (\mathbf{p}_e^b - \mathbf{p}_e^0)
+    \mathbf{p}_{b/O}^{n} = \mathbf{p}_{b/e}^{n} + \mathbf{p}_{e/O}^{n} = R_e^n (\mathbf{p}_{b/e}^{e} - \mathbf{p}_{O/e}^{e})
 $$
-Finally, quantities expressed in the NED frame can be transformed into the Body frame using the vehicles attitude:
+For onboard sensors, the position of a sensor $\{s\}$ relative to the vehicle body origin, expressed in the NED frame, is given by
 $$
-    \mathbf{p}_b^a = R_b^n (\mathbf{p}_n^a - \mathbf{p}_n^b)
+\mathbf{p}_{s/b}^{n} = R_b^n \mathbf{p}_{s/b}^{b}
 $$
-where $R_b^n$ is the rotation matrix from NED to Body.  
+The absolute position of the sensor relative to the NED origin can then be found as
+$$
+\mathbf{p}_{s/O}^{n} = \mathbf{p}_{s/b}^{n} + \mathbf{p}_{b/O}^{n}
+$$
+where $\mathbf{p}_{s/b}^{b}$ is the known position of the sensor in the body frame, and $R_b^n$ is the rotation matrix representing the vehicles attitude from the Body to the NED frame.
+\\ \\
+This formulation relates the sensor position to the global reference frame by first rotating the sensor offset from the body frame into the navigation frame, then translating it using the vehicles global position. The rotation matrix $R_b^n$ is obtained from the vehicles orientation representation, typically parameterized using Euler angles or a unit quaternion, ensuring consistent alignment between the sensor, body, and navigation coordinate frames.
 \\ \\
 Maintaining a consistent chain of transformations between these frames is essential for reliable navigation and estimation. In practice, GNSS delivers global positions in WGS84 or ECEF coordinates, while onboard IMU sensors provide measurements in the Body frame. Sensor fusion algorithms such as the Extended Kalman Filter (EKF) and Error State Kalman Filter (ESKF) depend on these transformations to express all quantities consistently within the NED frame used for state estimation and control.

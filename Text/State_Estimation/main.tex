@@ -9,3 +9,14 @@ UKF (WIth bias and all :D f() IMU model for that, + since quarternion, have to n
 Some other that might be uselful for later just to mention, like ESKF or UKF for system Idtentification for hydrostatic and parameters and better model aproximation.
 TUNING (NIS and other stuff to keep in mind)
 State Variables at the end ie the ESKF variables that wahta we end up with
+
+
+EKF vs ESKF (1 kind of state vs 2 kinds of states)
+IMPORTANT: ESKF Covariance is of error state NOT nominal state!!!!!
+explain why error state better than EKF
+
+
+ESKF:
+A and G are just aprocimations of DISCRETIZATION, but you can get a better dicreteziced system using kayley hamilton for these error matrix system. however more run time witch might not be good, so thats why usually we use the A and G defined already lol
+
+

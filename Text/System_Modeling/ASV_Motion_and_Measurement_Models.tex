@@ -7,3 +7,20 @@ GNSS (as the aiding/measurement model, 2 antenas can get position and Heading).
 
 And the comparison/discussion between Fossen vs. INS (why INS chosen).
 Basically select good tool for the job you want to do, even though Fossen model is great, for our use case in SLAM a INS model will suffice, especially i combination with aiding measurements. Fossens is good but INS is simpler and in SLAM case for building a local map for Data Processing step it is more than god enough. like yes in this case Fossne might be more accurate if we had more system parameters that we know but then we would have to estimate system parameters, and for that we need system identification at that point. And then we have to consider is it worth doing full system identification for 1\% maybe more performance? SO jesjes INS model it is because of it.
+
+when talking on ins midel Presentation AND the book for designing the model is very nice
+ESKF DO NOT USE CONSTANT BIAS model because dificult to readjust (!!!Dangerous!!!), better is Wiener process ORRRR if we know something about inertial sensor use Gaus Markov Model BEST :D (Aka when INS chapter talk about bias modeling, the constant (BAD), wiener (Overly pesimistic), Gaus Markov (More realistic))
+esrrir state modeling is there to keep track of different between nominal and ground truth state
+
+INS:
+p is v in world frame
+v is acel in worldframe (thats why transform R) + gravity
+q is quarternion propagate explain
+biases models choice build from constant to wirner to gaus markov
+basically need to do more modeling 
+
+
+Chapter on:
+- Fossen Marineccraft model as motion model
+- Inertial Navogation System and motion model
+- GNNS as aiding measuremnt model
