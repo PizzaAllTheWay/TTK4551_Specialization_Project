@@ -78,168 +78,161 @@ Fossen's formulation exhibits several key properties, the mass matrix $\mathbf{M
 
 
 \subsubsection{Inertial Navigation System (INS) Model as Motion Model}
-The inertial navigation model describes the kinematic evolution of a vehicles position, velocity, and attitude driven by accelerometer and gyroscope measurements \cite{sensor_fusion_book}. Unlike hydrodynamic models that rely on physical parameters such as mass or damping, the INS formulation models the vehicle motion directly from inertial measurements, making it independent of the vehicles geometry or operating environment. This makes it well suited for generic navigation and SLAM applications where a purely kinematic description is sufficient. INS sually give out their measuremnts in quarternion form and that is ualusally the best and common practive so INS is mdeled after quarternions NOT euler andgles ectect...
+The inertial navigation model describes the kinematic evolution of a vehicles position, velocity, and attitude as driven by inertial sensor measurements \cite{sensor_fusion_book}. Unlike hydrodynamic models that depend on physical parameters such as mass, damping, or buoyancy, the INS formulation is purely kinematic and relies only on accelerometer and gyroscope data. This makes it independent of the vehicles geometry, operating environment, or fluid interaction. As a result, the model is particularly suitable for generic navigation and SLAM applications where dynamic modeling of external forces is unnecessary.  
+\\ \\
+IMUs typically represent attitude using quaternions rather than Euler angles. This avoids singularities and ensures smooth rotational updates even under large orientation changes, making quaternion based propagation the standard approach for INS implementations.  
 \\ \\
 The continuous time state vector is defined as
 $$
     \mathbf{x} =
     \begin{bmatrix}
         \mathbf{p}_{b/O}^{n} & \mathbf{v}_{b/O}^{n} & \mathbf{q} & \mathbf{b}_a & \mathbf{b}_g
-    \end{bmatrix}^\top,
+    \end{bmatrix}^\top
 $$
-where $\mathbf{p}_{b/O}^{n} = [x, y, z]^\top$ is the position in the navigation (NED) frame of the sensor, $\mathbf{v}_{b/O}^{n} = [v_x, v_y, v_z]^\top$ is the velocity of the sensor in the NED frame, $\mathbf{q}$ is the quaternion representing the rotation from body to navigation frame, $\mathbf{b}_a$ and $\mathbf{b}_g$ are the accelerometer and gyroscope biases.  
-
-
-
-
-The inertial navigation model describes the kinematic evolution of a vehicle’s position, velocity, and attitude as driven by inertial sensor measurements. The foundation of this formulation is the deterministic, noise-free relationship between translational and rotational motion, which forms the basis of all INS propagation models.  
+where $\mathbf{p}_{b/O}^{n} = [x, y, z]^\top$ is the position of the body origin relative to the navigation frame, $\mathbf{v}_{b/O}^{n} = [v_x, v_y, v_z]^\top$ is the velocity in the same frame, $\mathbf{q}$ is the quaternion representing the rotation from body to navigation frame, and $\mathbf{b}_a$ and $\mathbf{b}_g$ are the accelerometer and gyroscope biases, respectively.  
+\\ \\
+The position and velocity states describe translational motion in the navigation frame, while the quaternion captures attitude evolution through rotational kinematics. The bias states account for the slowly varying sensor offsets that develop over time due to temperature changes, component aging, and other environmental factors. Together, these quantities form a complete minimal representation of the navigation state used in inertial systems, forming the basis for the continuous time kinematic model that governs their time evolution.  
+\\ \\
+The inertial navigation model therefore describes the kinematic evolution of the vehicles position, velocity, and attitude as driven by inertial sensor measurements. The foundation of this formulation is the deterministic, noise free relationship between translational and rotational motion, which forms the core of all INS propagation models.  
 \\ \\
 In the ideal case without any sensor errors, the motion of the sensor can be expressed as
 $$
 \begin{aligned}
-    \dot{\mathbf{p}}_{s/O}^{n} &= \mathbf{v}_{s/O}^{n}, \\
-    \dot{\mathbf{v}}_{s/O}^{n} &= R_b^n(\mathbf{q})\,(R_s^b\,\mathbf{a}_m) + \mathbf{g}^n, \\
+    \dot{\mathbf{p}}_{s/O}^{n} &= \mathbf{v}_{s/O}^{n} \\
+    \dot{\mathbf{v}}_{s/O}^{n} &= R_b^n(\mathbf{q})\,(R_s^b\,\mathbf{a}_m) + \mathbf{g}^n \\
     \dot{\mathbf{q}} &= \tfrac{1}{2}\,\mathbf{q} \otimes (R_s^b\,\boldsymbol{\omega}_m)
 \end{aligned}
 $$
-where $\mathbf{p}_{s/O}^{n}$ and $\mathbf{v}_{s/O}^{n}$ are the position and velocity of the sensor with respect to an inertial reference frame (e.g., NED), $R_b^n(\mathbf{q})$ is the rotation matrix transforming vectors from the body frame to the navigation frame, and $R_s^b$ is the rotation matrix from the sensor to body frame. The measured quantities $\mathbf{a}_m$ and $\boldsymbol{\omega}_m$ are the specific force and angular rate readings provided by the IMU, expressed in the sensor’s own coordinate frame. These measurements are therefore related to the true body-frame motion through the sensor’s fixed mounting orientation, such that $\mathbf{a}_m = \mathbf{a}_{s/b}^{s}$ and $\boldsymbol{\omega}_m = \boldsymbol{\omega}_{s/b}^{s}$.  
+where $\mathbf{p}_{s/O}^{n}$ and $\mathbf{v}_{s/O}^{n}$ are the position and velocity of the sensor with respect to an inertial reference frame like NED, $R_b^n(\mathbf{q})$ is the rotation matrix transforming vectors from the body frame to the navigation frame, and $R_s^b$ is the rotation matrix from the sensor to body frame. The measured quantities $\mathbf{a}_m$ and $\boldsymbol{\omega}_m$ are the specific force and angular rate readings provided by the IMU, expressed in the sensors own coordinate frame. These measurements are therefore related to the true body frame motion through the sensors fixed mounting orientation, such that $\mathbf{a}_m = \mathbf{a}_{s/b}^{s}$ and $\boldsymbol{\omega}_m = \boldsymbol{\omega}_{s/b}^{s}$.  
 \\ \\
-In practice, the inertial sensors are rarely placed exactly at the vehicle’s center of gravity (COG). When the sensor is offset by a position vector $\mathbf{r}_{s/b}^{b}$ from the body frame origin (usually defined at the COG), the accelerations measured by the IMU no longer correspond directly to the translational accelerations of the vehicle. Instead, the rotational motion of the body introduces additional terms due to centripetal and tangential accelerations. The total acceleration of the sensor can then be expressed as
+In practice, the inertial sensors are rarely placed exactly at the vehicles center of gravity (COG). When the sensor is offset by a position vector $\mathbf{r}_{s/b}^{b}$ from the body frame origin usually defined at the COG, the accelerations measured by the IMU no longer correspond directly to the translational accelerations of the vehicle. Instead, the rotational motion of the body introduces additional terms due to centripetal and tangential accelerations. The total acceleration of the sensor can then be expressed as
 $$
-\mathbf{a}_{s/O}^{b} = \mathbf{a}_{b/O}^{b} + \dot{\boldsymbol{\omega}}_{b/O}^{b} \times \mathbf{r}_{s/b}^{b} + \boldsymbol{\omega}_{b/O}^{b} \times (\boldsymbol{\omega}_{b/O}^{b} \times \mathbf{r}_{s/b}^{b}),
+\mathbf{a}_{s/O}^{b} = \mathbf{a}_{b/O}^{b} + \dot{\boldsymbol{\omega}}_{b/O}^{b} \times \mathbf{r}_{s/b}^{b} + \boldsymbol{\omega}_{b/O}^{b} \times (\boldsymbol{\omega}_{b/O}^{b} \times \mathbf{r}_{s/b}^{b})
 $$
-where $\mathbf{a}_{b/O}^{b}$ is the linear acceleration of the body origin, $\boldsymbol{\omega}_{b/O}^{b}$ is the angular velocity of the body, and $\dot{\boldsymbol{\omega}}_{b/O}^{b}$ its angular acceleration. The second term represents the tangential acceleration component caused by rotational acceleration, while the third term corresponds to the centripetal acceleration arising from constant rotation. These effects are collectively known as the **lever arm effect**, and they cause the IMU to measure accelerations that differ from those experienced at the COG.  
+where $\mathbf{a}_{b/O}^{b}$ is the linear acceleration of the body origin, $\boldsymbol{\omega}_{b/O}^{b}$ is the angular velocity of the body, and $\dot{\boldsymbol{\omega}}_{b/O}^{b}$ its angular acceleration. The second term represents the tangential acceleration component caused by rotational acceleration, while the third term corresponds to the centripetal acceleration arising from constant rotation. These effects are collectively known as the \textit{``lever arm effect''}, and they cause the IMU to measure accelerations that differ from those experienced at the COG.  
 \\ \\
-Accurately compensating for the lever arm effect requires knowledge of the exact mounting offset $\mathbf{r}_{s/b}^{b}$ and precise estimates of both angular velocity and angular acceleration. The latter is particularly difficult to obtain in real time, as most MEMS-based IMUs do not measure angular acceleration directly. Numerical differentiation of gyroscope signals amplifies measurement noise and introduces additional uncertainty, making real-time compensation computationally challenging and often unreliable.  
+Accurately compensating for the lever arm effect requires knowledge of the exact mounting offset $\mathbf{r}_{s/b}^{b}$ and precise estimates of both angular velocity and angular acceleration. The latter is particularly difficult to obtain in real time, as most MEMS-based IMU (like microAmpere IMU) do not measure angular acceleration directly. Numerical differentiation of gyroscope signals amplifies measurement noise and introduces additional uncertainty, making real-time compensation computationally challenging and often unreliable.  
 \\ \\
-Therefore, in this work, it is assumed that the inertial sensors are mounted close to the vehicle’s center of gravity. For the microAmpere ASV, this assumption is valid since the IMU is physically located near the COG within the central electronics housing. As a result, the lever arm terms become negligible, and the simplified kinematic model given above provides an accurate and practical representation of the vehicle motion. This assumption greatly simplifies the mathematical model while retaining sufficient fidelity for navigation and SLAM applications.  
+Therefore, in this master thesis work, it is assumed that the inertial sensors are mounted close to the vehicles center of gravity. For the microAmpere ASV, this assumption is valid since the IMU is physically located near the COG within the central electronics housing. As a result, the lever arm terms become negligible, and the simplified kinematic model given above provides an accurate and practical representation of the vehicle motion. This assumption greatly simplifies the mathematical model while retaining sufficient fidelity for navigation and SLAM applications.  
 \\ \\
-Under this assumption, the IMU can be considered approximately coincident with the body frame origin, effectively treating the sensor as rigidly aligned with the vehicle’s center of gravity. The motion model can then be expressed directly in terms of the body frame as
+Under this assumption, the IMU can be considered approximately coincident with the body frame origin, effectively treating the sensor as rigidly aligned with the vehicles center of gravity. The motion model can then be expressed directly in terms of the body frame as
 $$
 \begin{aligned}
-    \dot{\mathbf{p}}_{b/O}^{n} &= \mathbf{v}_{b/O}^{n}, \\
-    \dot{\mathbf{v}}_{b/O}^{n} &= R_b^n(\mathbf{q})\,\mathbf{a}_m + \mathbf{g}^n, \\
+    \dot{\mathbf{p}}_{b/O}^{n} &= \mathbf{v}_{b/O}^{n} \\
+    \dot{\mathbf{v}}_{b/O}^{n} &= R_b^n(\mathbf{q})\,\mathbf{a}_m + \mathbf{g}^n \\
     \dot{\mathbf{q}} &= \tfrac{1}{2}\,\mathbf{q} \otimes \boldsymbol{\omega}_m
 \end{aligned}
 $$
-which defines the nominal, noise-free kinematic model used in this work. It captures the translational and rotational motion of the ASV based solely on the IMU’s accelerometer and gyroscope measurements, with attitude expressed through quaternion integration for smooth and singularity-free orientation propagation.
-
-
-
-
-
-
-In practice, the accelerometer and gyroscope measurements are affected by sensor biases and measurement noise. The measured signals can be modeled as
+which defines the nominal, noise free kinematic model used in this work. It captures the translational and rotational motion of the ASV based solely on the IMUs accelerometer and gyroscope measurements, with attitude expressed through quaternion integration for smooth and singularity free orientation propagation.
+\\ \\
+In practice, the accelerometer and gyroscope measurements are not perfect and are affected by sensor biases and measurement noise. These imperfections cause the estimated position and attitude to drift over time, as small integration errors accumulate during motion. The measured sensor outputs can therefore be modeled as
 $$
 \begin{aligned}
-    \mathbf{a}_m &= \mathbf{a}^b + \mathbf{b}_a + \mathbf{n}_a, \\
-    \boldsymbol{\omega}_m &= \boldsymbol{\omega}^b + \mathbf{b}_g + \mathbf{n}_g,
+    \mathbf{a}_m &= R^{T}(q_t)\,(\mathbf{a_t} - \mathbf{g}) + \mathbf{a}_{bt} + \mathbf{a}_{n} \\
+    \boldsymbol{\omega}_m &= \boldsymbol{\omega}_t + \mathbf{\omega}_{bt} + \mathbf{\omega}_{n}
 \end{aligned}
 $$
-where $\mathbf{a}_m$ and $\boldsymbol{\omega}_m$ are the measured accelerations and angular rates, $\mathbf{b}_a$ and $\mathbf{b}_g$ are slowly varying biases, and $\mathbf{n}_a$ and $\mathbf{n}_g$ are zero-mean Gaussian noise processes.  
+where $\mathbf{a}_m$ and $\boldsymbol{\omega}_m$ are the measured accelerations and angular rates, $\mathbf{a}_{bt}$ and $\mathbf{\omega}_{bt}$ denote slowly varying sensor biases, and $\mathbf{a}_{n}$ and $\mathbf{\omega}_{n}$ are zero mean Gaussian noise processes representing measurement uncertainty. The reason for choosing zero mean Gaussian noise processes representation is just to make calculations easier to manage, and usually inertial sensor noise can be approximated to a pure gaussian.  
 \\ \\
-By substituting these into the noise-free kinematics, we obtain the full continuous-time INS model that represents the true motion under realistic sensor behavior:
+While the previous kinematic model assumed ideal, noise free measurements, real inertial sensors inherently produce signals corrupted by both bias and random noise. These effects introduce long term drift in velocity, position, and orientation estimates if uncorrected. To account for this, the noise and bias terms are explicitly included in the dynamic equations.  
+\\ \\
+By substituting the noisy sensor models into the noise free kinematics, we obtain the full continuous time INS motion model that represents the true system behavior under realistic sensor conditions:
 $$
 \begin{aligned}
-    \dot{\mathbf{p}}^n &= \mathbf{v}^n, \\
-    \dot{\mathbf{v}}^n &= R_b^n(\mathbf{q}^{bn})(\mathbf{a}_m - \mathbf{b}_a - \mathbf{n}_a) + \mathbf{g}^n, \\
-    \dot{\mathbf{q}}^{bn} &= \tfrac{1}{2}\,\mathbf{q}^{bn} \otimes (\boldsymbol{\omega}_m - \mathbf{b}_g - \mathbf{n}_g).
+    \dot{\mathbf{p}}_{b/O}^{n} &= \mathbf{v}_{b/O}^{n} \\
+    \dot{\mathbf{v}}_{b/O}^{n} &= R_b^n(\mathbf{q})\,(\mathbf{a}_m - \mathbf{a}_{bt} - \mathbf{a}_n) + \mathbf{g}^n \\
+    \dot{\mathbf{q}} &= \tfrac{1}{2}\,\mathbf{q} \otimes (\boldsymbol{\omega}_m - \mathbf{\omega}_{bt} - \mathbf{\omega}_n)
 \end{aligned}
 $$
-The rotation matrix $R_b^n(\mathbf{q}^{bn})$ maps body-frame accelerations to the navigation frame using the quaternion orientation. This formulation allows seamless integration of angular motion without the singularities associated with Euler angles.  
-
-
-
-
-
-
-
-
-Inertial measurement systems such as accelerometers and gyroscopes inherently suffer from drift over time since they measure relative motion rather than absolute quantities. Small integration errors in acceleration and angular rate accumulate, leading to increasing position and attitude uncertainty. To account for this behavior, the model must include bias terms that represent these slow time-varying drifts. Proper modeling of these biases is crucial for achieving stable and accurate navigation performance.  
+where $R_b^n(\mathbf{q})$ transforms body frame accelerations into the navigation frame according to the current orientation quaternion.  
 \\ \\
-Sensor biases are typically modeled as stochastic processes that evolve slowly with time. Several approaches exist depending on the desired balance between simplicity and realism. The most basic is the constant bias model,
-$$
-    \dot{\mathbf{b}} = 0,
-$$
-which assumes a fixed offset in the measurements. Although simple, this model is generally unsuitable because real sensors exhibit time-dependent drift that cannot be captured by a constant term.  
+This formulation captures the complete inertial motion propagation process, accounting for both deterministic motion and stochastic sensor effects. It forms the basis for all subsequent modeling of bias dynamics and sensor noise processes.
 \\ \\
-A more flexible alternative is the Wiener process model,
-$$
-    \dot{\mathbf{b}} = \mathbf{n}_b,
-$$
-where $\mathbf{n}_b$ is a zero-mean white noise process. This formulation allows the bias to evolve as a random walk, but it tends to be overly pessimistic, leading to unbounded uncertainty growth over time.  
+Inertial measurement systems such as accelerometers and gyroscopes inherently suffer from drift over time, as they measure relative motion rather than absolute quantities. Small integration errors in acceleration and angular rate accumulate, causing increasing uncertainty in position and attitude estimates. To account for this phenomenon, bias terms are introduced to represent slow, time varying offsets in the sensor readings. Accurate bias modeling is essential for achieving reliable and stable navigation performance, particularly for low cost MEMS-based sensors where bias instability is a dominant error source.  
 \\ \\
-A more realistic and widely used model for MEMS-based IMUs is the first-order Gauss–Markov process,
+Sensor biases are typically represented as stochastic processes that evolve gradually over time. Several modeling approaches exist, each offering a trade off between realism and complexity. The simplest approach is the constant bias model,
 $$
-    \dot{\mathbf{b}} = -\tfrac{1}{\tau}\mathbf{b} + \mathbf{n}_b,
+    \dot{\mathbf{b}} = 0
 $$
-where $\tau$ is the correlation time constant determining how quickly the bias decays toward zero. This model captures both the short-term random fluctuations and long-term drift characteristics observed in real sensors, providing a good balance between realism and numerical stability.  
+which assumes a fixed, time invariant offset in the sensor readings. Although straightforward, this model is generally insufficient for practical applications since real world sensors exhibit continuous drift due to thermal, mechanical, and electronic variations.  
 \\ \\
-Accordingly, in this work, the accelerometer and gyroscope biases $\mathbf{b}_a$ and $\mathbf{b}_g$ are modeled as first-order Gauss–Markov processes:
+A more flexible formulation is the Wiener process, or better known as random walk model,
+$$
+    \dot{\mathbf{b}} = \mathbf{b}_n
+$$
+where $\mathbf{b}_n$ is a zero mean white noise process. This allows the bias to evolve stochastically over time, capturing unmodeled variations in sensor output. However, this model tends to be overly conservative, as the bias uncertainty grows without bound, making it unsuitable for long duration navigation where bounded behavior is required.  
+\\ \\
+A more realistic representation for modern inertial sensors is the first-order Gauss-Markov process,
+$$
+    \dot{\mathbf{b}} = -\tfrac{1}{\tau}\mathbf{b} + \mathbf{b}_n
+$$
+where $\tau$ is the correlation time constant that defines how quickly the bias decays toward zero. This model captures both short term fluctuations and long term drift, providing a balanced compromise between physical accuracy and numerical stability. It ensures that bias uncertainty remains bounded while reflecting the natural stochastic variation of real IMU behavior.  
+\\ \\
+Accordingly, the accelerometer and gyroscope biases are modeled as first order Gauss-Markov processes:
 $$
 \begin{aligned}
-    \dot{\mathbf{b}}_a &= -p_a \mathbf{b}_a + \mathbf{n}_{b_a}, \\
-    \dot{\mathbf{b}}_g &= -p_g \mathbf{b}_g + \mathbf{n}_{b_g},
+    \dot{\mathbf{a}}_{bt} &= -p_{\mathbf{a}b}\,I\,\mathbf{a}_{bt} + \mathbf{a}_{w} \\
+    \dot{\mathbf{\omega}}_{bt} &= -p_{\mathbf{\omega}b}\,I\,\mathbf{\omega}_{bt} + \mathbf{\omega}_{w}
 \end{aligned}
 $$
-where $p_a = 1/\tau_a$ and $p_g = 1/\tau_g$ are the inverse correlation times for the accelerometer and gyroscope bias models, and $\mathbf{n}_{b_a}$ and $\mathbf{n}_{b_g}$ are zero-mean white noise driving terms.  
+where $p_{\mathbf{a}b} = 1/\tau_a$ and $p_{\mathbf{\omega}b} = 1/\tau_g$ denote the inverse correlation times for the accelerometer and gyroscope bias models, respectively. The terms $\mathbf{a}_{w}$ and $\mathbf{\omega}_{w}$ represent zero mean white noise processes driving the bias evolution.  
 \\ \\
-This bias modeling approach provides a physically consistent and computationally stable representation of sensor drift, enabling the INS motion model to capture both the vehicle’s true kinematics and the stochastic behavior of its inertial sensors. It forms the foundation for accurate navigation state propagation between aiding measurements such as GNSS.
-
-
-
-
-
-
-The full INS model presented previously describes the true motion of the vehicle, including all stochastic processes representing sensor noise and bias drift. However, in practice, we often need a deterministic model that captures only the underlying physical behavior of the system. This is referred to as the nominal state kinematic model. It represents how the system would evolve if all noise processes were absent, effectively describing the idealized motion derived directly from the IMU measurements. Such a nominal formulation is particularly useful for state propagation in navigation and estimation systems, as it defines the expected dynamics in the absence of random disturbances.  
+This bias modeling framework provides a physically consistent and numerically stable representation of inertial sensor drift. By incorporating these bias dynamics, the INS model can accurately describe both the deterministic vehicle motion and the stochastic effects introduced by the inertial sensors.  
 \\ \\
-By removing the stochastic noise terms from the true state equations, the resulting nominal kinematic model becomes significantly simpler while still retaining the essential dynamics of position, velocity, attitude, and bias evolution. In this case, the accelerometer and gyroscope measurements are treated as control inputs, and the model describes the deterministic response of the navigation states to these inputs. The nominal state kinematics can thus be written as
+With the inclusion of bias dynamics, the complete continuous time true state kinematic model of the system is expressed as
+$$
+\begin{aligned}
+    \dot{\mathbf{p}}_{b/O}^{n} &= \mathbf{v}_{b/O}^{n} \\
+    \dot{\mathbf{v}}_{b/O}^{n} &= R_b^n(\mathbf{q})\,(\mathbf{a}_m - \mathbf{a}_{bt} - \mathbf{a}_n) + \mathbf{g}^n \\
+    \dot{\mathbf{q}} &= \tfrac{1}{2}\,\mathbf{q} \otimes (\boldsymbol{\omega}_m - \mathbf{\omega}_{bt} - \mathbf{\omega}_n) \\
+    \dot{\mathbf{a}}_{bt} &= -p_{\mathbf{a}b}\,I\,\mathbf{a}_{bt} + \mathbf{a}_{w} \\
+    \dot{\mathbf{\omega}}_{bt} &= -p_{\mathbf{\omega}b}\,I\,\mathbf{\omega}_{bt} + \mathbf{\omega}_{w}
+\end{aligned}
+$$
+This formulation constitutes the complete nonlinear inertial motion model, capturing both the deterministic kinematics of the vehicle and the stochastic processes that characterize real sensor behavior.
+\\ \\
+The complete INS model previously presented captures the full physical and stochastic behavior of the vehicle, incorporating both deterministic motion and random processes such as measurement noise and bias drift. While this representation accurately reflects real sensor behavior, it is often desirable to isolate the deterministic part of the dynamics to describe the nominal system behavior. This simplified formulation, known as the nominal state kinematic model, represents how the system would evolve in the absence of stochastic disturbances. It provides a clear and noise-free description of the vehicles motion based purely on inertial measurements, forming the foundation for state propagation in navigation and estimation frameworks.  
+\\ \\
+The nominal model assumes that all noise components are zero, leaving only the essential deterministic relationships between position, velocity, attitude, and sensor biases. In this formulation, the accelerometer and gyroscope measurements are treated as control inputs driving the systems motion. This perspective simplifies the dynamics while preserving the physical structure of the original model, allowing efficient and accurate propagation of the navigation states between external aiding updates.  
+\\ \\
+By removing the stochastic noise terms from the true state equations, the nominal state kinematic model becomes
 $$
     \dot{\mathbf{x}} = f(\mathbf{x}, \mathbf{u}) =
     \begin{bmatrix}
-        \dot{\mathbf{p}}^n \\
-        \dot{\mathbf{v}}^n \\
-        \dot{\mathbf{q}}^{bn} \\
-        \dot{\mathbf{b}}_a \\
-        \dot{\mathbf{b}}_g
+        \dot{\mathbf{p}}_{b/O}^{n} \\
+        \dot{\mathbf{v}}_{b/O}^{n} \\
+        \dot{\mathbf{q}} \\
+        \dot{\mathbf{a}}_b \\
+        \dot{\mathbf{\omega}}_b
     \end{bmatrix}
     =
     \begin{bmatrix}
-        \mathbf{v}^n \\
-        R_b^n(\mathbf{q}^{bn})(\mathbf{a}_m - \mathbf{b}_a) + \mathbf{g}^n \\
-        \tfrac{1}{2}\,\mathbf{q}^{bn} \otimes (\boldsymbol{\omega}_m - \mathbf{b}_g) \\
-        -p_a \mathbf{b}_a \\
-        -p_g \mathbf{b}_g
+        \mathbf{v}_{b/O}^{n} \\
+        R_b^n(\mathbf{q})\,(\mathbf{a}_m - \mathbf{a}_{b}) + \mathbf{g}^n \\
+        \tfrac{1}{2}\,\mathbf{q} \otimes (\boldsymbol{\omega}_m - \mathbf{\omega}_{b}) \\
+        -p_{\mathbf{a}b}\,I\,\mathbf{a}_b \\
+        -p_{\mathbf{\omega}b}\,I\,\mathbf{\omega}_b
     \end{bmatrix}
 $$
 where
 $$
     \mathbf{x} =
     \begin{bmatrix}
-        \mathbf{p}^n & \mathbf{v}^n & \mathbf{q}^{bn} & \mathbf{b}_a & \mathbf{b}_g
+        \mathbf{p}_{b/O}^{n} & \mathbf{v}_{b/O}^{n} & \mathbf{q} & \mathbf{b}_a & \mathbf{b}_g
     \end{bmatrix}^\top,
     \qquad
     \mathbf{u} =
     \begin{bmatrix}
         \mathbf{a}_m & \boldsymbol{\omega}_m
-    \end{bmatrix}^\top.
+    \end{bmatrix}^\top
 $$
-Here, $\mathbf{p}^n$ and $\mathbf{v}^n$ denote position and velocity in the navigation frame, $\mathbf{q}^{bn}$ is the attitude quaternion transforming from body to navigation frame, and $\mathbf{b}_a$ and $\mathbf{b}_g$ are the accelerometer and gyroscope biases. The terms $p_a = 1/\tau_a$ and $p_g = 1/\tau_g$ represent the inverse correlation times describing the exponential decay of the bias states.  
+Here, $\mathbf{p}^n$ and $\mathbf{v}^n$ represent the vehicles position and velocity expressed in the navigation frame, $\mathbf{q}^{bn}$ denotes the attitude quaternion defining the rotation from the body to the navigation frame, and $\mathbf{b}_a$ and $\mathbf{b}_g$ represent the accelerometer and gyroscope biases, respectively. The parameters $p_a = 1/\tau_a$ and $p_g = 1/\tau_g$ correspond to the inverse correlation times governing the exponential decay rates of the bias dynamics.  
 \\ \\
-This nominal form expresses the pure kinematic propagation of the INS in the absence of measurement noise or random disturbances. It defines the expected time evolution of the navigation states given ideal inertial measurements and serves as the baseline dynamic model for subsequent integration with aiding sensors such as GNSS.
-
-
-
-
-
-
-This formulation defines the complete continuous-time nonlinear kinematic model used to propagate the navigation states between external aiding updates. It describes how the ASV’s position, velocity, and attitude evolve purely based on inertial sensor inputs, while explicitly accounting for bias dynamics through first-order Gauss–Markov processes. The model therefore captures both the physical motion of the vehicle and the characteristic drift behavior of low-cost MEMS sensors.  
+This nominal model represents the idealized, noise free motion of the vehicle as inferred from IMU measurements. It captures the deterministic propagation of position, velocity, attitude, and bias under perfect sensor conditions, serving as the baseline dynamic model for integrated navigation systems.  
 \\ \\
-By separating the nominal, deterministic kinematics from the stochastic sensor noise processes, the INS formulation provides a flexible foundation for real-time navigation. It allows precise prediction of the vehicle’s motion over short time intervals where aiding information may be unavailable, while maintaining a consistent mathematical structure for later correction using GNSS or other aiding sensors.  
+By separating deterministic kinematics from stochastic sensor effects, the INS formulation provides a structured foundation for real-time state estimation. This nominal model is particularly suited for use within an Error State Kalman Filter (ESKF), where it defines the expected system evolution between measurement updates and enables correction using external aiding sources such as GNSS or magnetometers.  
 \\ \\
-Overall, the INS-based motion model offers a compact and computationally efficient representation of the ASV dynamics that is well suited for embedded implementation and integration with sensor fusion frameworks. Although it abstracts away complex hydrodynamic effects, its combination of simplicity, generality, and compatibility with aiding measurements makes it a practical and robust choice for autonomous surface vehicle navigation and SLAM applications.
-
-
+Overall, the INS based motion model offers a compact and computationally efficient representation of the ASVs dynamics. While it omits detailed hydrodynamic effects, its balance of simplicity, generality, and compatibility with sensor fusion frameworks makes it a robust and practical choice for autonomous surface vehicle navigation and SLAM applications.
 
 
 
