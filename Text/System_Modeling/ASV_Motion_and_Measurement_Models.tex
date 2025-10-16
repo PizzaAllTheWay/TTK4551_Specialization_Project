@@ -6,8 +6,8 @@ The chapter begins by introducing Fossen's marine craft model, which captures th
 
 
 
-\subsubsection{Fossen's Marine Craft Model as Motion Model}
-Fossen's marine craft model provides a unified mathematical framework for describing the nonlinear motion dynamics of marine vehicles. The formulation captures both rigid body and hydrodynamic effects using a compact matrix vector representation, making it suitable for analysis, control, and simulation of ships, underwater vehicles, and surface vessels \cite{fossen_marine_craft_model}. It effectively bridges classical rigid body mechanics and hydrodynamic theory, allowing a complete description of marine vehicle motion in 6 DOF while preserving important system properties such as symmetry and passivity.  
+\subsubsection{Kinetic Motion Model}
+The kinetic motion model employed in this work is based on Fossens nonlinear 6 DOF marine craft formulation, which provides a unified mathematical framework for describing the dynamic behavior of marine vehicles \cite{fossen_marine_craft_model}. This model captures both rigid body and hydrodynamic effects using a compact matrix vector representation, making it suitable for analysis, control, and simulation of ships, underwater vehicles, and surface vessels. By bridging classical rigid body mechanics with hydrodynamic theory, the formulation offers a complete description of marine craft dynamics while preserving key physical properties such as symmetry, passivity, and energy consistency.
 \\ \\
 The general 6 DOF equations of motion can be written as
 $$
@@ -77,8 +77,8 @@ Fossen's formulation exhibits several key properties, the mass matrix $\mathbf{M
 
 
 
-\subsubsection{Inertial Navigation System (INS) Model as Motion Model}
-The inertial navigation model describes the kinematic evolution of a vehicles position, velocity, and attitude as driven by inertial sensor measurements \cite{sensor_fusion_book}. Unlike hydrodynamic models that depend on physical parameters such as mass, damping, or buoyancy, the INS formulation is purely kinematic and relies only on accelerometer and gyroscope data. This makes it independent of the vehicles geometry, operating environment, or fluid interaction. As a result, the model is particularly suitable for generic navigation and SLAM applications where dynamic modeling of external forces is unnecessary.  
+\subsubsection{Kinematic Motion Model}
+The kinematic motion model adopted in this work is based on the Inertial Navigation System (INS) formulation, which describes the time evolution of a vehicles position, velocity, and attitude as functions of inertial sensor measurements \cite{sensor_fusion_book}. Unlike hydrodynamic models that depend on physical parameters such as mass, damping, or buoyancy, the INS model is purely kinematic and relies solely on accelerometer and gyroscope data. This independence from the vehicles geometry, operating environment, and fluid interaction makes it well suited for generic navigation and SLAM applications, where a simplified yet robust representation of motion is sufficient for accurate state propagation between aiding measurements.
 \\ \\
 IMUs typically represent attitude using quaternions rather than Euler angles. This avoids singularities and ensures smooth rotational updates even under large orientation changes, making quaternion based propagation the standard approach for INS implementations.  
 \\ \\
@@ -107,11 +107,11 @@ where $\mathbf{p}_{s/O}^{n}$ and $\mathbf{v}_{s/O}^{n}$ are the position and vel
 \\ \\
 In practice, the inertial sensors are rarely placed exactly at the vehicles center of gravity (COG). When the sensor is offset by a position vector $\mathbf{r}_{s/b}^{b}$ from the body frame origin usually defined at the COG, the accelerations measured by the IMU no longer correspond directly to the translational accelerations of the vehicle. Instead, the rotational motion of the body introduces additional terms due to centripetal and tangential accelerations. The total acceleration of the sensor can then be expressed as
 $$
-\mathbf{a}_{s/O}^{b} = \mathbf{a}_{b/O}^{b} + \dot{\boldsymbol{\omega}}_{b/O}^{b} \times \mathbf{r}_{s/b}^{b} + \boldsymbol{\omega}_{b/O}^{b} \times (\boldsymbol{\omega}_{b/O}^{b} \times \mathbf{r}_{s/b}^{b})
+    \mathbf{a}_{s/O}^{b} = \mathbf{a}_{b/O}^{b} + \boldsymbol{\alpha}_{b/O}^{b} \times \mathbf{r}_{s/b}^{b} + \boldsymbol{\omega}_{b/O}^{b} \times (\boldsymbol{\omega}_{b/O}^{b} \times \mathbf{p}_{s/b}^{b})
 $$
-where $\mathbf{a}_{b/O}^{b}$ is the linear acceleration of the body origin, $\boldsymbol{\omega}_{b/O}^{b}$ is the angular velocity of the body, and $\dot{\boldsymbol{\omega}}_{b/O}^{b}$ its angular acceleration. The second term represents the tangential acceleration component caused by rotational acceleration, while the third term corresponds to the centripetal acceleration arising from constant rotation. These effects are collectively known as the \textit{``lever arm effect''}, and they cause the IMU to measure accelerations that differ from those experienced at the COG.  
+where $\mathbf{a}_{b/O}^{b}$ is the linear acceleration of the body origin, $\boldsymbol{\omega}_{b/O}^{b}$ is the angular velocity of the body, and $\boldsymbol{\alpha}_{b/O}^{b}$ its angular acceleration. The second term represents the tangential acceleration component caused by rotational acceleration, while the third term corresponds to the centripetal acceleration arising from constant rotation. These effects are collectively known as the \textit{``lever arm effect''}, and they cause the IMU to measure accelerations that differ from those experienced at the COG.  
 \\ \\
-Accurately compensating for the lever arm effect requires knowledge of the exact mounting offset $\mathbf{r}_{s/b}^{b}$ and precise estimates of both angular velocity and angular acceleration. The latter is particularly difficult to obtain in real time, as most MEMS-based IMU (like microAmpere IMU) do not measure angular acceleration directly. Numerical differentiation of gyroscope signals amplifies measurement noise and introduces additional uncertainty, making real-time compensation computationally challenging and often unreliable.  
+Accurately compensating for the lever arm effect requires knowledge of the exact mounting offset $\mathbf{p}_{s/b}^{b}$ and precise estimates of both angular velocity and angular acceleration. The latter is particularly difficult to obtain in real time, as most MEMS-based IMU (like microAmpere IMU) do not measure angular acceleration directly. Numerical differentiation of gyroscope signals amplifies measurement noise and introduces additional uncertainty, making real-time compensation computationally challenging and often unreliable.  
 \\ \\
 Therefore, in this master thesis work, it is assumed that the inertial sensors are mounted close to the vehicles center of gravity. For the microAmpere ASV, this assumption is valid since the IMU is physically located near the COG within the central electronics housing. As a result, the lever arm terms become negligible, and the simplified kinematic model given above provides an accurate and practical representation of the vehicle motion. This assumption greatly simplifies the mathematical model while retaining sufficient fidelity for navigation and SLAM applications.  
 \\ \\
@@ -236,30 +236,72 @@ Overall, the INS based motion model offers a compact and computationally efficie
 
 
 
-\subsubsection{GNSS as Aiding Measurement Model}
-This subsection defines the aiding model using dual-antenna GNSS measurements. It should:
-\begin{itemize}
-    \item Describe how each antenna provides position measurements in the NED frame.
-    \item Derive the measurement model for position:
-    $$
-    \mathbf{z}_p = \mathbf{p} + \mathbf{n}_p
-    $$
-    \item Explain heading estimation from the baseline vector between antennas.
-    \item Show how measurements are fused in the ESKF as linear updates.
-    \item Discuss measurement noise modeling, covariance tuning, and outlier rejection.
-\end{itemize}
-This section establishes the absolute reference aiding used to correct INS drift and provide global consistency.
+\subsubsection{Aiding Measurement Model}
+The aiding measurements are obtained from a dual antenna GNSS system that provides absolute position and heading information in the NED frame. The two antennas are rigidly mounted on the bow, one on the port side and one on the starboard side, at known offsets from the vessels COG. This setup enables direct estimation of both the vessels global position and its yaw orientation, offering an absolute reference that continuously corrects the drift accumulated in the INS.  
+\\ \\
+Accurate aiding of position and attitude is crucial for maintaining reliable long term navigation performance. While the INS can propagate the motion of the vessel accurately over short time spans, it inevitably accumulates errors due to sensor noise and bias drift. The GNSS updates counteract this drift by providing absolute position corrections, while the dual antenna baseline yields a precise heading measurement that stabilizes the yaw estimate, one of the most critical states for surface vessel guidance and control. Reliable yaw information directly improves trajectory tracking, waypoint following, and steering stability.  
+\\ \\
+For autonomous surface vessels like the microAmpere, roll and pitch angles can be neglected due to the platforms inherently stable catamaran style hull. The dual pontoons provide strong passive stability and a nearly constant deck attitude even under moderate disturbances. Consequently, the vessel motion is effectively modeled in two dimensions, considering surge, sway, and yaw, while the vertical position $z$ is retained from GNSS for completeness. This simplification reduces system complexity without sacrificing accuracy and aligns well with the physical behavior and operational characteristics of small, inherently stable surface craft.
+\\ \\
+Each GNSS receiver provides a position measurement expressed in the navigation frame as
+$$
+    \mathbf{z}_{p,i} = \mathbf{p}_{\text{GNSS}i/O}^{n}
+    = \mathbf{p}_{b/O}^{n} + R_b^n(\mathbf{q})\,\mathbf{p}_{\text{GNSS}i/b}^{b} + \mathbf{n}_{p,i}, 
+    \qquad i \in \{1,2\}
+$$
+where $\mathbf{p}_{b/O}^{n}$ denotes the body origin (COG) position in the navigation frame, $\mathbf{p}_{\text{GNSS}i/b}^{b}$ are the known lever arm offsets of each antenna expressed in the body frame, and $\mathbf{n}_{p,i}$ represents zero mean Gaussian measurement noise. Since both antennas are positioned forward of the COG, this transformation is necessary to align the raw GNSS positions with the INS state representation.  
+\\ \\
+From these two absolute position measurements, the relative vector between the antennas can be expressed in the navigation frame as
+$$
+    \mathbf{r}_{1/2}^{n} = \mathbf{r}_{GNSS1/GNSS2}^{n} = \mathbf{p}_{\text{GNSS2}/O}^{n} - \mathbf{p}_{\text{GNSS1}/O}^{n}
+$$
+This baseline vector defines the spatial relationship between the antennas and allows extraction of the vessels yaw angle $\psi$ through its horizontal components as
+$$
+    \psi = \text{atan2}(r_{1/2,y}^{n},\, r_{1/2,x}^{n})
+$$
+Here, $\psi$ represents the heading of the line connecting the port and starboard antennas relative to true north. The accuracy of the heading estimate depends on the baseline length, where a longer lateral separation provides greater sensitivity and higher precision. The dual antenna setup therefore yields a robust and drift free heading measurement that complements the attitude propagation performed by the INS.  
+\\ \\
+The two GNSS position measurements and the derived yaw angle are then combined into a single aiding measurement vector that provides both global position and orientation information. The complete GNSS measurement is expressed as
+$$
+    \mathbf{z}_{\text{GNSS}} =
+    \begin{bmatrix}
+        \mathbf{p}_{b/O}^{n} \\
+        \psi
+    \end{bmatrix}
+    = h(\mathbf{x}) + \mathbf{n}_{\text{GNSS}}
+$$
+where the nonlinear measurement function $h(\mathbf{x})$ relates the navigation state
+$$
+    \mathbf{x} =
+    \begin{bmatrix}
+        \mathbf{p}_{b/O}^{n} & \mathbf{v}_{b/O}^{n} & \mathbf{q} & \mathbf{b}_a & \mathbf{b}_g
+    \end{bmatrix}^\top
+$$
+to the observed quantities as
+$$
+    h(\mathbf{x}) =
+    \begin{bmatrix}
+        \mathbf{p}_{b/O}^{n} + R_b^n(\mathbf{q})\,\mathbf{p}_{\text{GNSS1}/b}^{b} \\
+        \text{atan2}\big((R_b^n(\mathbf{q})\,\mathbf{r}_{1/2}^{b})_y,\,(R_b^n(\mathbf{q})\,\mathbf{r}_{1/2}^{b})_x\big)
+    \end{bmatrix}
+$$
+In this expression, the first component corresponds to the transformed GNSS position measurement, while the second term computes the expected yaw angle $\psi$ from the vehicle attitude quaternion $\mathbf{q}$ and the known baseline vector $\mathbf{r}_{1/2}^{b}$ between antennas in the body frame. The term $\mathbf{n}_{\text{GNSS}}$ represents zero mean Gaussian noise, combining both position and heading measurement uncertainties, with covariance $\mathbf{R}_{\text{GNSS}} = \text{diag}(\mathbf{R}_{p}, \sigma_\psi^2)$.
+\\ \\
+For small autonomous surface vessels such as the MicroAmpere, the platform demonstrates inherently stable roll and pitch dynamics due to its catamaran style pontoon design. This hydrodynamic stability allows the assumption that roll and pitch angles remain close to zero during nominal operation, effectively reducing the attitude representation to a single dominant rotation about the vertical axis, corresponding to the yaw angle. With this simplification, the GNSS aiding measurements primarily correct horizontal position and heading, while small vertical displacements and tilting motions are neglected, as they have minimal impact on overall navigation accuracy.  
+\\ \\
+The dual antenna GNSS configuration therefore provides a compact and robust aiding source that supplies both absolute position and heading information in the navigation frame. By constraining the inertial navigation solution with globally referenced measurements, it compensates for the natural drift of the INS and ensures long-term stability, accuracy, and global consistency in the estimated vehicle pose. This makes the aiding model particularly suitable for marine environments where attitude variations are small and precise horizontal localization is of primary importance.
 
 
 
 \subsubsection{Model Comparison and Selection}
-This subsection compares the Fossen marine craft model and the INS-based kinematic model. It should:
-\begin{itemize}
-    \item Discuss the trade-offs between dynamic completeness and model simplicity.
-    \item Argue that while Fossen’s model provides high physical accuracy, it requires extensive parameter identification (added mass, damping, hydrodynamic coefficients).
-    \item Highlight that the INS model, though simplified, is sufficient for SLAM and data processing tasks.
-    \item Emphasize that for building a local map and performing state estimation with aiding sensors, the INS model provides an optimal balance of accuracy and practicality.
-    \item Conclude that a full system identification for marginal performance gain is not justified for this application.
-\end{itemize}
-This section justifies the modeling approach used in this thesis, positioning the INS-based model as the preferred choice for SLAM-oriented estimation.
+The Fossen marine craft kinetic model and the INS kinematic model represent two complementary approaches to describing marine vehicle motion, positioned at opposite ends of the modeling spectrum between kinetic and kinematic formulations. The kinetic, or dynamic, model proposed by Fossen provides a complete physical representation of the vessels motion by explicitly accounting for rigid body dynamics, hydrodynamic effects, added mass, damping, and restoring forces. This yields a high fidelity model suitable for control design, simulation, and performance analysis under varying sea conditions. However, this level of detail comes with considerable complexity, as the model depends on numerous hydrodynamic and inertial parameters that must be carefully identified or experimentally measured.  
+\\ \\
+Conversations with experts in system identification, such as Shenglun Yi from the University of Padova, highlight that while partial parameter identification using recursive or adaptive methods is feasible, obtaining a complete and accurate hydrodynamic parameter set is extremely difficult in practice. Only a few parameters, such as surge damping or longitudinal added mass, can be reliably identified through simplified tests, while the majority require extensive experimentation and highly controlled conditions. As a result, performing full hydrodynamic system identification for small autonomous vessels like the microAmpere would demand substantial effort with limited improvement in navigation performance, making it impractical for this application.  
+\\ \\
+On the other hand, the INS based kinematic model provides a simplified but effective alternative. It represents the vessels motion through inertial sensor data, accelerations and angular rates, without explicitly modeling the underlying dynamics or environmental interactions. This makes it computationally efficient and easily implementable, while still providing accurate short term state propagation suitable for SLAM, navigation, and sensor fusion tasks. The model inherently focuses on position, velocity, and attitude evolution, allowing seamless integration with aiding sensors such as GNSS or vision based systems.  
+\\ \\
+The INS formulation, however, also introduces certain assumptions. One key simplification adopted in this work is that the IMU is positioned close to the vessels COG, effectively neglecting the lever arm effects that arise from angular accelerations acting on sensors offset from the COG. For the microAmpere, this assumption is valid since the IMU is mounted sufficiently close to the COG, minimizing the induced linear acceleration errors and simplifying the overall model structure.  
+\\ \\
+In conclusion, the INS based kinematic model occupies a balanced position between dynamic completeness and modeling simplicity. It omits the complex hydrodynamic modeling of the kinetic approach but retains sufficient fidelity for accurate state estimation and SLAM applications. For small, stable surface vessels, this trade off provides the optimal compromise between accuracy, computational efficiency, and practical feasibility, making the INS based formulation the preferred choice for this thesis.
+
 
