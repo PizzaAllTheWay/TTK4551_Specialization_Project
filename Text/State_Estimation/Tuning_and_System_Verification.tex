@@ -1,0 +1,21 @@
+\subsection{Tuning and System Verification}
+\begin{itemize}
+    \item Describe the role of process ($Q$) and measurement ($R$) noise covariance tuning.
+    \item Explain methods such as innovation monitoring and adaptive noise estimation.
+    \item Introduce the Normalized Innovation Squared (NIS) test for filter consistency validation.
+    \item Mention residual monitoring and gating for outlier rejection.
+    \item Summarize empirical tuning steps performed using real-world test data.
+\end{itemize}
+
+Final State Definition maybe just shortly mantion at the very end here nothing much jesjes and mention that UKF-M is the best way forward
+\begin{itemize}
+    \item Present the final ESKF state vector:
+    $$
+        \mathbf{x} =
+        \begin{bmatrix}
+            \mathbf{p} & \mathbf{v} & \mathbf{q} & \mathbf{b}_a & \mathbf{b}_g
+        \end{bmatrix}^\top
+    $$
+    \item Explain that position, velocity, and attitude are expressed in the navigation frame, while accelerometer and gyroscope biases evolve in the body frame.
+    \item Conclude that this representation provides an optimal balance between model realism, computational efficiency, and estimator robustness.
+\end{itemize}

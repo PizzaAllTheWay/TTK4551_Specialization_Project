@@ -1,22 +1,10 @@
 \section{State Estimation}
-
-intro to it
-Bayes filter
-KF + Talk about propagation Newton and also RK4 method :)
-EKF
-ESKF
-UKF on MANIFOLDS! ie UKF-M style (WIth bias and all :D f() IMU model for that, + since quarternion, have to normalize after update the quarternion angle yesyes) + Alternative Sigma Point generation for better aproximation and stability
-Some other that might be uselful for later just to mention, like ESKF or UKF for system Idtentification for hydrostatic and parameters and better model aproximation. ALso explain that there is a UKF-M ie state estimation using Lie Groups to go even further, but dont use much time on this just mention it as je this for maybe future idk, normal ukf is the way to go now.
-TUNING (NIS and other stuff to keep in mind)
-State Variables at the end ie the ESKF variables that wahta we end up with
-
-
-EKF vs ESKF (1 kind of state vs 2 kinds of states)
-IMPORTANT: ESKF Covariance is of error state NOT nominal state!!!!!
-explain why error state better than EKF
-
-
-ESKF:
-A and G are just aprocimations of DISCRETIZATION, but you can get a better dicreteziced system using kayley hamilton for these error matrix system. however more run time witch might not be good, so thats why usually we use the A and G defined already lol
+\input{Text/State_Estimation/Introduction.tex} \clearpage
+\input{Text/State_Estimation/Bayes_Filter.tex} \clearpage
+\input{Text/State_Estimation/Kalman_Filter.tex} \clearpage
+\input{Text/State_Estimation/Extended_Kalman_Filter.tex} \clearpage
+\input{Text/State_Estimation/Error_State_Kalman_Filter.tex} \clearpage
+\input{Text/State_Estimation/Unscented_Kalman_Filter_on_Manifolds.tex} \clearpage
+\input{Text/State_Estimation/Tuning_and_System_Verification.tex} \clearpage
 
 

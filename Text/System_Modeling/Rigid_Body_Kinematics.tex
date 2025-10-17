@@ -225,36 +225,6 @@ This quaternion based formulation is computationally efficient and avoids the gi
 
 
 \subsubsection{Linear Acceleration}
-The linear acceleration of a point $P$ on a rigid body consists of translational, tangential, centripetal, and coriolis components. It is expressed as
-$$
-    \mathbf{a}_{P/O}^{b} =
-    \mathbf{a}_{b/O}^{b}
-    + \mathbf{a}_{P/b}^{b}
-    + \boldsymbol{\alpha}_{b/O}^{b} \times \mathbf{p}_{P/b}^{b}
-    + \boldsymbol{\omega}_{b/O}^{b} \times (\boldsymbol{\omega}_{b/O}^{b} \times \mathbf{p}_{P/b}^{b})
-    + 2\boldsymbol{\omega}_{b/O}^{b} \times \mathbf{v}_{P/b}^{b}
-$$
-where $\mathbf{a}_O$ is the acceleration of the reference point (often the body origin or center of mass), $\boldsymbol{\alpha}$ is the angular acceleration vector, $\boldsymbol{\omega}$ is the angular velocity vector, $\mathbf{r}_{OP}$ is the position vector from the reference point $O$ to the point $P$, and $\mathbf{v}_{rel}$ is the velocity of $P$ relative to the rotating frame. The first term represents the translational acceleration of the reference point, the second term the tangential acceleration caused by the change in rotational rate, the third term the centripetal acceleration directed toward the axis of rotation, and the fourth term the coriolis acceleration arising from relative motion within the rotating frame.  
-\\ \\
-When the body fixed frame is used, the total acceleration of a point expressed in the navigation (NED) frame is related through the rotation matrix as
-$$
-    \mathbf{a}_b^n = R_b^n \mathbf{a}_b^b,
-$$
-and conversely,
-$$
-    \mathbf{a}_b^b = (R_b^n)^\top \mathbf{a}_b^n.
-$$
-These transformations ensure consistent representation between body frame sensor measurements and navigation frame quantities.  
-\\ \\
-In inertial navigation systems, accelerometers measure the specific force, which is the total acceleration excluding gravity, given by
-$$
-    \mathbf{f}^b = \mathbf{a}_b^b - R_n^b \mathbf{g}^n,
-$$
-where $\mathbf{g}^n = [0, 0, g]^\top$ is the gravity vector in the NED frame. The specific force $\mathbf{f}^b$ is the quantity directly measured by IMUs and forms the basis for estimating velocity and position through numerical integration.
-
-
-
-\subsubsection{Linear Acceleration}
 The linear acceleration of a point $P$ on a rigid body consists of translational, tangential, centripetal, and Coriolis components. It is expressed in the body frame as
 $$
     \mathbf{a}_{P/O}^{b} =

@@ -1,0 +1,14 @@
+\subsection{Unscented Kalman Filter on Manifolds}
+important to refrence \cite{ukf} and \cite{ukf_manifold}.
+\begin{itemize}
+    \item Introduce the Unscented Transform for nonlinear mean and covariance propagation.
+    \item Explain sigma-point generation using the $2n+1$ sampling rule.
+    \item Describe how UKF-M handles quaternion and bias estimation on Lie groups to maintain geometric consistency.
+    \item Mention quaternion normalization after each update step.
+    \item Discuss alternative sigma-point generation methods for improved stability.
+    \item Briefly reference UKF and ESKF extensions for system identification and parameter estimation.
+    \item Conclude that the UKF-M framework extends UKF theory for manifold-based state estimation.
+    \item Thsi is the Filter we wil use for state estimatioon in SLAM, explain why it better for slam acocording to the papaer idk man you tell me lol
+    \item It is as good or better than ESKF and is in soem way simpler to manage and impleemnet as we don't need to maintain the Jacobians of the system and stuff with discretization hell hole. However it does come at the cost of compute, sampling based aproaches will always take more compute and memory, never the less for our satet its not an issue
+\end{itemize}
+
