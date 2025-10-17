@@ -170,7 +170,7 @@ Lie groups provide a mathematical framework for representing continuous and smoo
 \\ \\
 The rotation group $\mathrm{SO}(3)$, called the Special Orthogonal Group, represents all possible 3D rotations. Each rotation is described by a $3\times3$ matrix $R$ that satisfies
 $$
-    R^T R = I, \quad \det(R) = 1.
+    R^T R = I, \quad \det(R) = 1
 $$
 This group is smooth and continuous, meaning that small changes in orientation correspond to small movements on the manifold. To describe small or incremental rotations, $\mathrm{SO}(3)$ is associated with its tangent space, the Lie algebra $\mathfrak{so}(3)$.  
 \\ \\
@@ -181,18 +181,20 @@ $$
         0 & -\omega_z & \omega_y \\
         \omega_z & 0 & -\omega_x \\
         -\omega_y & \omega_x & 0
-    \end{bmatrix}.
+    \end{bmatrix}
 $$
 This matrix form is simply another way of expressing the cross product $\boldsymbol{\omega} \times \mathbf{v}$, which rotates a vector $\mathbf{v}$ by a small angle.  
 \\ \\
 The exponential map connects this local representation to an actual finite rotation on $\mathrm{SO}(3)$:
-$$
-    R = \exp(\boldsymbol{\omega}^\times),
-$$
+\begin{equation}
+    R = \exp(\boldsymbol{\omega}^\times)
+    \label{eq:lie-groups-and-manifold-exponential}
+\end{equation}
 And the inverse operation (the logarithmic map) retrieves the corresponding small rotation from $R$:
-$$
-    \boldsymbol{\omega} = \log(R).
-$$
+\begin{equation}
+    \boldsymbol{\omega} = \log(R)
+    \label{eq:lie-groups-and-manifold-logarithmic}
+\end{equation}
 These two functions allow smooth transitions between local angular velocity representations and full 3D orientations, which is highly useful for filters and optimizers for SLAM.  
 \\ \\
 To include translation as well as rotation, the concept extends to $\mathrm{SE}(3)$, the so called Special Euclidean Group, which describes full 3D rigid body motion:

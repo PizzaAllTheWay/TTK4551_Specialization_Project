@@ -7,6 +7,8 @@
     //"editor.rulers": [100],  // optional guideline
     
     "cSpell.words": [
+        "Jacobians",
+        "linearities",
         "linearizes",
         "Posteriori",
         "Preintegration"

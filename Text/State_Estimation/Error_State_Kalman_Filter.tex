@@ -11,18 +11,19 @@ The nominal INS model is already defined earlier in this work in Equation \ref{e
 \\ \\
 From the nominal INS model, the corresponding error state INS model is obtained by linearizing the nonlinear equations around the current nominal trajectory. This process isolates the small deviations between the true state and the estimated nominal state, allowing the linearized error dynamics to be described by a 1st order system. Following the formulation by Edmund Brekke in \textit{``Fundamentals of Sensor Fusion''} \cite{sensor_fusion_book}, the continuous time linear time varying (LTV) error state dynamics are expressed as
 $$
-    \delta\dot{\mathbf{x}} =
+    \delta\mathbf{x} =
     \begin{bmatrix}
-        \delta\dot{\mathbf{p}}_{b/O}^{n} \\
-        \delta\dot{\mathbf{v}}_{b/O}^{n} \\
-        \delta\dot{\mathbf{\theta}} \\
-        \delta\dot{\mathbf{a}}_b \\
-        \delta\dot{\mathbf{\omega}}_b
+        \delta\mathbf{p}_{b/O}^{n} \\
+        \delta\mathbf{v}_{b/O}^{n} \\
+        \delta\mathbf{\theta} \\
+        \delta\mathbf{a}_b \\
+        \delta\mathbf{\omega}_b
     \end{bmatrix}
-    =
-    A(\mathbf{x}) \, \delta\mathbf{x} + G(\mathbf{x})\,\mathbf{n}
 $$
-Here, $\delta\mathbf{x}$ represents the small deviation between the true and nominal state vectors, and $\mathbf{n}$ is the continuous-time process noise, typically modeled as zero mean Gaussian white noise. The system matrices $A(\mathbf{x})$ and $G(\mathbf{x})$ depend on the current nominal state and describe how these small deviations evolve in time.  
+$$
+    \delta\dot{\mathbf{x}} = A(\mathbf{x}) \, \delta\mathbf{x} + G(\mathbf{x})\,\mathbf{n}
+$$
+Here, $\delta\mathbf{x}$ represents the small deviation between the true and nominal state vectors, and $\mathbf{n}$ is the continuous time process noise, typically modeled as zero mean Gaussian white noise. The system matrices $A(\mathbf{x})$ and $G(\mathbf{x})$ depend on the current nominal state and describe how these small deviations evolve in time.  
 \\ \\
 The attitude error is represented using the small angle quaternion approximation, which linearizes the rotation error between the estimated and true attitudes. This approximation holds for small orientation deviations and is expressed as
 $$
@@ -170,7 +171,7 @@ Here, $S = [\tfrac{\delta\hat{\boldsymbol{\theta}}}{2}]_\times$ denotes the smal
 \textbf{Quaternion normalization:} \\ \noindent
 Finally, quaternion normalization is applied to maintain a valid unit quaternion representation:
 $$
-    \mathbf{q}_{k|k} \leftarrow \frac{\mathbf{q}_{k|k}}{\|\mathbf{q}_{k|k}\|}.
+    \mathbf{q}_{k|k} \leftarrow \frac{\mathbf{q}_{k|k}}{\|\mathbf{q}_{k|k}\|}
 $$
 This step guarantees that the attitude estimate remains on the unit hypersphere, preventing numerical drift and preserving a consistent rotation representation.
 \\ \\
