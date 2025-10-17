@@ -196,7 +196,7 @@ The complete INS model previously presented captures the full physical and stoch
 The nominal model assumes that all noise components are zero, leaving only the essential deterministic relationships between position, velocity, attitude, and sensor biases. In this formulation, the accelerometer and gyroscope measurements are treated as control inputs driving the systems motion. This perspective simplifies the dynamics while preserving the physical structure of the original model, allowing efficient and accurate propagation of the navigation states between external aiding updates.  
 \\ \\
 By removing the stochastic noise terms from the true state equations, the nominal state kinematic model becomes
-$$
+\begin{equation}
     \dot{\mathbf{x}} = f(\mathbf{x}, \mathbf{u}) =
     \begin{bmatrix}
         \dot{\mathbf{p}}_{b/O}^{n} \\
@@ -213,9 +213,10 @@ $$
         -p_{\mathbf{a}b}\,I\,\mathbf{a}_b \\
         -p_{\mathbf{\omega}b}\,I\,\mathbf{\omega}_b
     \end{bmatrix}
-$$
+    \label{eq:kinematics-motion-model}
+\end{equation}
 where
-$$
+\begin{equation}
     \mathbf{x} =
     \begin{bmatrix}
         \mathbf{p}_{b/O}^{n} & \mathbf{v}_{b/O}^{n} & \mathbf{q} & \mathbf{b}_a & \mathbf{b}_g
@@ -225,8 +226,9 @@ $$
     \begin{bmatrix}
         \mathbf{a}_m & \boldsymbol{\omega}_m
     \end{bmatrix}^\top
-$$
-Here, $\mathbf{p}^n$ and $\mathbf{v}^n$ represent the vehicles position and velocity expressed in the navigation frame, $\mathbf{q}^{bn}$ denotes the attitude quaternion defining the rotation from the body to the navigation frame, and $\mathbf{b}_a$ and $\mathbf{b}_g$ represent the accelerometer and gyroscope biases, respectively. The parameters $p_a = 1/\tau_a$ and $p_g = 1/\tau_g$ correspond to the inverse correlation times governing the exponential decay rates of the bias dynamics.  
+    \label{eq:kinematics-motion-model-states}
+\end{equation}
+Here, $\mathbf{p}_{b/O}^{n}$ and $\mathbf{v}_{b/O}^{n}$ represent the vehicles position and velocity expressed in the navigation frame, $\mathbf{q}$ denotes the attitude quaternion defining the rotation from the body to the navigation frame, and $\mathbf{b}_a$ and $\mathbf{b}_g$ represent the accelerometer and gyroscope biases, respectively. The parameters $p_a = 1/\tau_a$ and $p_g = 1/\tau_g$ correspond to the inverse correlation times governing the exponential decay rates of the bias dynamics.  
 \\ \\
 This nominal model represents the idealized, noise free motion of the vehicle as inferred from IMU measurements. It captures the deterministic propagation of position, velocity, attitude, and bias under perfect sensor conditions, serving as the baseline dynamic model for integrated navigation systems.  
 \\ \\
@@ -278,13 +280,14 @@ $$
     \end{bmatrix}^\top
 $$
 to the observed quantities as
-$$
+\begin{equation}
     h(\mathbf{x}) =
     \begin{bmatrix}
         \mathbf{p}_{b/O}^{n} + R_b^n(\mathbf{q})\,\mathbf{p}_{\text{GNSS1}/b}^{b} \\
         \text{atan2}\big((R_b^n(\mathbf{q})\,\mathbf{r}_{1/2}^{b})_y,\,(R_b^n(\mathbf{q})\,\mathbf{r}_{1/2}^{b})_x\big)
     \end{bmatrix}
-$$
+    \label{eq:aiding-measurement-model}
+\end{equation}
 In this expression, the first component corresponds to the transformed GNSS position measurement, while the second term computes the expected yaw angle $\psi$ from the vehicle attitude quaternion $\mathbf{q}$ and the known baseline vector $\mathbf{r}_{1/2}^{b}$ between antennas in the body frame. The term $\mathbf{n}_{\text{GNSS}}$ represents zero mean Gaussian noise, combining both position and heading measurement uncertainties, with covariance $\mathbf{R}_{\text{GNSS}} = \text{diag}(\mathbf{R}_{p}, \sigma_\psi^2)$.
 \\ \\
 For small autonomous surface vessels such as the MicroAmpere, the platform demonstrates inherently stable roll and pitch dynamics due to its catamaran style pontoon design. This hydrodynamic stability allows the assumption that roll and pitch angles remain close to zero during nominal operation, effectively reducing the attitude representation to a single dominant rotation about the vertical axis, corresponding to the yaw angle. With this simplification, the GNSS aiding measurements primarily correct horizontal position and heading, while small vertical displacements and tilting motions are neglected, as they have minimal impact on overall navigation accuracy.  

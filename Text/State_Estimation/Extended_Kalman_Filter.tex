@@ -26,15 +26,15 @@ An accurate discretization of the continuous time dynamics is essential to ensur
 \\ \\
 The resulting discrete time model is given by
 $$
-    \mathbf{x}_{k+1} = F_k\mathbf{x}_k + G_k\mathbf{u}_k,
+    \mathbf{x}_{k+1} = F_k\mathbf{x}_k + G_k\mathbf{u}_k
 $$
 where
 $$
     F_k = e^{A\Delta t}, \qquad
-    G_k = \int_0^{\Delta t} e^{A\tau}B\,d\tau.
+    G_k = \int_0^{\Delta t} e^{A\tau}B\,d\tau
 $$
 This can be computed compactly using the augmented matrix exponential
-$$
+\begin{equation}
     e\,^{
         \begin{bmatrix}
             A & B \\ 
@@ -46,58 +46,62 @@ $$
     \begin{bmatrix}
         F_k & G_k \\
         0 & I
-    \end{bmatrix}.
-$$
+    \end{bmatrix}
+    \label{eq:ZOH}
+\end{equation}
 The ZOH method preserves both the stability and dynamic behavior of the original continuous time system exactly for LTI models. It provides a numerically stable and accurate discretization, making it particularly suitable for embedded real-time implementations.  
 \\ \\
 In digital systems, the matrix exponential $e^{A\Delta t}$ cannot be computed analytically and must be approximated numerically. A reliable and efficient method is the \textit{``Padé approximation with scaling and squaring''}, which provides a good balance between computational speed and numerical accuracy.  
 \\ \\
 The Padé approximation expresses the exponential as a rational function:
-$$
+\begin{equation}
     e^{A} \approx \left(I - \frac{A}{2} + \frac{A^2}{12} - \frac{A^3}{120} + \dots \right)^{-1}
-                  \left(I + \frac{A}{2} + \frac{A^2}{12} + \frac{A^3}{120} + \dots \right),
-$$
+                  \left(I + \frac{A}{2} + \frac{A^2}{12} + \frac{A^3}{120} + \dots \right)
+    \label{eq:pade1}
+\end{equation}
 where higher order terms improve accuracy at the cost of computation. To avoid instability for large $\|A\|$, the matrix is first scaled down by a power of two, computed as
-$$
-    A_s = \frac{A}{2^s},
-$$
+\begin{equation}
+    A_s = \frac{A}{2^s}
+    \label{eq:pade2}
+\end{equation}
 where $s$ is chosen such that $\|A_s\|$ is below a defined threshold. The exponential of $A_s$ is then computed using the Padé rational form, and the final result is obtained by repeated squaring:
-$$
-    e^A = (e^{A_s})^{2^s}.
-$$
+\begin{equation}
+    e^A = (e^{A_s})^{2^s}
+    \label{eq:pade3}
+\end{equation}
 This method ensures stable and efficient computation of matrix exponentials even for high order systems, making it practical for embedded discretization of continuous time models.  
 \\ \\
 When using nonlinear dynamics, the continuous time system is generally expressed as
 $$
-    \dot{\mathbf{x}} = f(\mathbf{x}, \mathbf{u}).
+    \dot{\mathbf{x}} = f(\mathbf{x}, \mathbf{u})
 $$
 To implement the continuous time dynamics $\dot{\mathbf{x}} = f(\mathbf{x}, \mathbf{u})$ on a digital system, the time derivative must be approximated numerically. This is achieved through time discretization, where the continuous evolution of the state is expressed as a difference equation over discrete sampling intervals.  
 \\ \\
 One of the simplest and most widely used discretization schemes is the forward (Newton-Euler) method.
 $$
-    \mathbf{x}_{k+1} \approx \mathbf{x}_k + \Delta t \, f(\mathbf{x}_k, \mathbf{u}_k).
+    \mathbf{x}_{k+1} \approx \mathbf{x}_k + \Delta t \, f(\mathbf{x}_k, \mathbf{u}_k)
 $$  
 \\ \\
 In this discrete form, the function $f(\mathbf{x}, \mathbf{u})$ used within the EKF no longer represents the instantaneous derivative $\dot{\mathbf{x}}$, but rather the integrated or \textit{``propagated''} state over one time step. For notational simplicity, many EKF formulations redefine the discrete transition function as
 $$
-    f_d(\mathbf{x}_k, \mathbf{u}_k) = \mathbf{x}_k + \Delta t \, f(\mathbf{x}_k, \mathbf{u}_k),
+    f_d(\mathbf{x}_k, \mathbf{u}_k) = \mathbf{x}_k + \Delta t \, f(\mathbf{x}_k, \mathbf{u}_k)
 $$
 where $f_d(\cdot)$ implicitly includes the time step integration. This convention is used throughout this work to maintain concise notation while ensuring consistency with the underlying continuous time model.
 \\ \\
 The EKF prediction and update steps then follow directly from the linearized system. During the \textit{``prediction step''}, the nonlinear process model is propagated as
 $$
-    \hat{\mathbf{x}}_{k|k-1} = f_d(\hat{\mathbf{x}}_{k-1|k-1}, \mathbf{u}_{k-1}),
+    \hat{\mathbf{x}}_{k|k-1} = f_d(\hat{\mathbf{x}}_{k-1|k-1}, \mathbf{u}_{k-1})
 $$
 and the covariance prediction is computed using the linearized Jacobian:
 $$
-    P_{k|k-1} = F_k P_{k-1|k-1} F_k^\top + Q.
+    P_{k|k-1} = F_k P_{k-1|k-1} F_k^\top + Q
 $$
 The \textit{``update step''} corrects the predicted estimate using the measurement model:
 $$
 \begin{aligned}
-    K_k &= P_{k|k-1}H_k^\top(H_kP_{k|k-1}H_k^\top + R)^{-1}, \\
-    \hat{\mathbf{x}}_{k|k} &= \hat{\mathbf{x}}_{k|k-1} + K_k[\mathbf{z}_k - h(\hat{\mathbf{x}}_{k|k-1})], \\
-    P_{k|k} &= (I - K_kH_k)P_{k|k-1}.
+    K &= P_{k|k-1}H^\top(HP_{k|k-1}H^\top + R)^{-1} \\
+    \hat{\mathbf{x}}_{k|k} &= \hat{\mathbf{x}}_{k|k-1} + K[\mathbf{z}_k - h(\hat{\mathbf{x}}_{k|k-1})] \\
+    P_{k|k} &= (I - K\,H)P_{k|k-1}
 \end{aligned}
 $$
 After each update, attitude states represented by quaternions are normalized to maintain a valid unit quaternion. This step is crucial in inertial navigation systems, as numerical drift in the quaternion magnitude can lead to significant orientation errors over time. The normalization ensures that the quaternion remains on the unit hypersphere, preserving a valid rotation representation:
