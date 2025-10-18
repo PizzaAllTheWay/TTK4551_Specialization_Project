@@ -187,12 +187,12 @@ This matrix form is simply another way of expressing the cross product $\boldsym
 \\ \\
 The exponential map connects this local representation to an actual finite rotation on $\mathrm{SO}(3)$:
 \begin{equation}
-    R = \exp(\boldsymbol{\omega}^\times)
+    R = \exp(\boldsymbol{\omega}^\times) \qquad (Tangent \rightarrow Manifold)
     \label{eq:lie-groups-and-manifold-exponential}
 \end{equation}
 And the inverse operation (the logarithmic map) retrieves the corresponding small rotation from $R$:
 \begin{equation}
-    \boldsymbol{\omega} = \log(R)
+    \boldsymbol{\omega} = \log(R) \qquad (Tangent \leftarrow Manifold)
     \label{eq:lie-groups-and-manifold-logarithmic}
 \end{equation}
 These two functions allow smooth transitions between local angular velocity representations and full 3D orientations, which is highly useful for filters and optimizers for SLAM.  
