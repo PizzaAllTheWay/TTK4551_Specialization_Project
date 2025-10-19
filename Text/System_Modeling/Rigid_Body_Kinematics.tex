@@ -243,21 +243,21 @@ $$
     \mathbf{a}_{P/O}^{b} =
     \mathbf{a}_{b/O}^{b}
     + \boldsymbol{\alpha}_{b/O}^{b} \times \mathbf{p}_{P/b}^{b}
-    + \boldsymbol{\omega}_{b/O}^{b} \times (\boldsymbol{\omega}_{b/O}^{b} \times \mathbf{p}_{P/b}^{b}).
+    + \boldsymbol{\omega}_{b/O}^{b} \times (\boldsymbol{\omega}_{b/O}^{b} \times \mathbf{p}_{P/b}^{b})
 $$
 This formulation is widely used to compute the acceleration at sensor locations such as IMUs or GNSS antennas mounted away from the vehicles center of mass.  
 \\ \\
 To express the acceleration in the navigation (NED) frame, the transformation is performed using the rotation matrix $R_b^n$:  
 $$
-    \mathbf{a}_{P/O}^{n} = R_b^n \mathbf{a}_{P/O}^{b},
+    \mathbf{a}_{P/O}^{n} = R_b^n \mathbf{a}_{P/O}^{b}
 $$
 and conversely,  
 $$
-    \mathbf{a}_{P/O}^{b} = (R_b^n)^\top \mathbf{a}_{P/O}^{n}.
+    \mathbf{a}_{P/O}^{b} = (R_b^n)^\top \mathbf{a}_{P/O}^{n}
 $$
 \\ \\
 In inertial navigation systems, accelerometers measure the specific force, which is the total acceleration excluding gravity:  
 $$
-    \mathbf{f}^b = \mathbf{a}_{b/O}^{b} - R_n^b \mathbf{g}^n,
+    \mathbf{f}^b = \mathbf{a}_{b/O}^{b} - R_n^b \mathbf{g}^n
 $$
 where $\mathbf{g}^n = [0, 0, g]^\top$ is the gravity vector in the NED frame. The specific force $\mathbf{f}^b$ is the quantity directly measured by IMUs and serves as the basis for estimating velocity and position through numerical integration.
