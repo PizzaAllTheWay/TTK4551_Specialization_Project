@@ -1,16 +1,18 @@
 \subsection{Micro Ampere ASV}
-\begin{figure}[H]
+\todo{TAP: Personally, not sure I like starting chapter 3 with a picture. Some into text would be good. Also, I like the when the figures are placed on top of page, not in the middle of the page...}
+\begin{figure}[!tbp]
     \centering
     \includegraphics[width=0.6\linewidth]{Pictures/Hardware/microAmpere_ASV/microAmpere_ASV.png}
     \caption{A picture of microAmpere Autonomous Surface Vessel (ASV). Picture taken from Luan Cao Vo Tran master thesis on microAmpere ASV.\textsuperscript{\cite{microAmpere_hardware_master_thesis1}}}
     \label{fig:microAmpere}
+    \todo{TAP: add reference to fig, where is the figure taken from? I see you have added a reference as a text, would be better to write someting like: A picure of .... (ASV) [3] , where [3] is the reference number in the bibliography. This applies to all later figures as well.}
 \end{figure}
 \noindent
 This section focuses on the \textit{``microAmpere Autonomous Surface Vessel (ASV)''} platform, which serves as the primary research and development base for this work. The information presented here is summarized from two detailed master theses, Luan Cao Vo Trans thesis on microAmpere hardware and integration \cite{microAmpere_hardware_master_thesis1}, and Henrik Reimers thesis on control and system design \cite{microAmpere_hardware_master_thesis2}. More detailed technical descriptions can be found in the referenced theses.
 \\ \\
 In this section, only the most relevant aspects of the platform are presented, specifically those that are essential for integrating a side scan sonar payload and for enabling SSS SLAM. The focus is therefore on the hardware architecture, computing layout, and synchronization systems that directly affect sonar data acquisition and processing.
 \\ \\
-The microAmpere is an advanced Autonomous Surface Vessel (ASV) developed at NTNU as a modular platform for autonomous docking and maritime robotics research. It is part of the Autodocking25 project and represents the next evolution of the Blue Robotics BlueBoat platform. The vessel was redesigned to support high performance perception, navigation, and control tasks under realistic marine conditions. Its main purpose is to provide a flexible and open research platform for experimenting with autonomous operations such as docking, waypoint navigation, and sensor fusion at sea.
+The microAmpere is an advanced Autonomous Surface Vessel (ASV) developed at NTNU as a modular platform for autonomous docking and maritime robotics research. It is part of the Autodocking25 project \todo{TAP: add reference} and represents the next evolution of the Blue Robotics BlueBoat platform. The vessel was redesigned to support high performance perception, navigation, and control tasks under realistic marine conditions. Its main purpose is to provide a flexible and open research platform for experimenting with autonomous operations such as docking, waypoint navigation, and sensor fusion at sea.
 \\ \\
 Physically, the vessel is based on the BlueBoat twin hull design, offering high stability and sufficient deck space for custom payloads. The hulls are constructed from High Density Polyethylene (HDPE), ensuring durability and resistance to saltwater corrosion. The superstructure houses one watertight enclosures containing the compute units, sensor interfaces, and power management systems. This enclosure is designed for quick maintenance and allows for modular upgrades for new hardware.
 \\ \\
