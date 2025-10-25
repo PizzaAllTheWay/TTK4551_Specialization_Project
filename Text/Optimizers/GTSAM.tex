@@ -1,4 +1,11 @@
 \subsection{GTSAM}
+\todo[inline]{NOTE: THIS CHAPTER NEEDS TO BE MOVED OUT! It needs to become its own whole chapter at the very end after Global Map and trajectory, because GTSAM has a lot more to offer, like reintegration schemes and IMu and Visual odometry with is a lot more that just Optimizer itself, and there I MUST refrece the following papaers and work done by teh amazing people here as GTSAM is a big reaserch project and university and licensce blababla....}
+\todo[inline]{GTSAM includes a state of the art IMU handling scheme based on (https://github.com/borglab/gtsam)}
+\todo[inline]{Todd Lupton and Salah Sukkarieh, "Visual-Inertial-Aided Navigation for High-Dynamic Motion in Built Environments Without Initial Conditions", TRO, 28(1):61-76, 2012.}
+\todo[inline]{Our implementation improves on this using integration on the manifold, as detailed in}
+\todo[inline]{Luca Carlone, Zsolt Kira, Chris Beall, Vadim Indelman, and Frank Dellaert, "Eliminating conditionally independent sets in factor graphs: a unifying perspective based on smart factors", Int. Conf. on Robotics and Automation (ICRA), 2014.}
+\todo[inline]{Christian Forster, Luca Carlone, Frank Dellaert, and Davide Scaramuzza, "IMU Preintegration on Manifold for Efficient Visual-Inertial Maximum-a-Posteriori Estimation", Robotics: Science and Systems (RSS), 2015.
+If you are using the factor in academic work, please cite the publications above.}
 Georgia Tech Smoothing and Mapping, GTSAM, is a BSD licensed C++ library for modeling estimation problems as factor graphs and solving them efficiently with batch optimizers and with incremental iSAM2 and Bayes tree methods. The core idea is to represent knowledge as a product of small factors, each involving only a few variables, and then exploit sparsity and variable elimination to compute fast and stable MAP estimates. In practice this gives a single, uniform toolkit for SLAM in 2D and 3D, visual odometry/SLAM, structure from motion, calibration, and related inference tasks, all built on the same mathematical foundation described in the iSAM2 and Bayes tree papers \cite{GTSAM_handbook,iSAM2_paper,Bayes_tree_for_SLAM_paper}.
 
 \paragraph{Design philosophy: graph first, values separate:}
