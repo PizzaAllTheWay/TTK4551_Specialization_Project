@@ -365,7 +365,7 @@ The propagation begins by generating these symmetric sigma points in the tangent
 \end{equation}
 Each $\boldsymbol{\xi}_i$ is a perturbation vector that expresses a small local offset in the tangent space, describing how the true state might deviate from the mean. The scaling factor is absorbed into the square root, and all sigma points are equally important due to their symmetric layout.  
 \\ \\
-Because the process model $f_d(\cdot)$ is defined directly on the manifold, these perturbations cannot be used as-is. They must first be mapped to actual states on the manifold. This is done using the $\boxplus$ operator,  
+Because the process model $f_d(\cdot)$ is defined directly on the manifold (See Equation \ref{eq:state-estimation-discrete-propagartion}), these perturbations cannot be used as is. They must first be mapped to actual states on the manifold. This is done using the $\boxplus$ operator,  
 $$
     \mathcal{X}_i = \hat{\mathbf{x}} \boxplus \boldsymbol{\xi}_i
 $$
@@ -375,7 +375,7 @@ Each of these manifold sigma points is then propagated through the nonlinear dis
 $$
     \mathcal{X}_i^- = f_d(\mathcal{X}_i, \mathbf{u})
 $$
-After propagation, all $\mathcal{X}_i^-$ remain on the manifold because $f_d(\cdot)$ defines evolution rules that preserve the manifold structure. For example, quaternion propagation keeps unit norm, and rigid-body motion remains on $\mathrm{SE}(3)$.  
+After propagation, all $\mathcal{X}_i^-$ remain on the manifold because $f_d(\cdot)$ defines evolution rules that preserve the manifold structure (See Equation \ref{eq:state-estimation-discrete-propagartion}). For example, quaternion propagation keeps unit norm, and rigid body motion remains on $\mathrm{SE}(3)$.  
 \\ \\
 The next step is to determine the predicted mean state $\hat{\mathbf{x}}^-$. Since the propagated sigma points $\mathcal{X}_i^-$ now lie on the manifold, their mean must also lie on the same manifold. Because manifolds do not support standard addition or averaging, the mean cannot be computed as a simple arithmetic sum. Instead, we define a dedicated function that estimates the manifold mean of a set of sigma points,  
 $$

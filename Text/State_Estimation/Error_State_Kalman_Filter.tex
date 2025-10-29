@@ -123,7 +123,7 @@ At the beginning of each iteration, the error state mean is initialized to zero:
 $$
     \delta\hat{\mathbf{x}}_{k|k-1} = \mathbf{0}
 $$
-The nominal state is propagated through the nonlinear discrete time INS process model:
+For the ESKF, the nominal state is propagated using the same nonlinear discrete time INS process model as in the EKF (Equation \ref{eq:state-estimation-discrete-propagartion}):  
 $$
     \hat{\mathbf{x}}_{k|k-1} = f_d(\hat{\mathbf{x}}_{k-1|k-1}, \mathbf{u}_{k-1})
 $$

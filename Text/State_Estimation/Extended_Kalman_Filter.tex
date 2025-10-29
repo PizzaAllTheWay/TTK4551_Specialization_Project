@@ -77,6 +77,17 @@ $$
 $$
 To implement the continuous time dynamics $\dot{\mathbf{x}} = f(\mathbf{x}, \mathbf{u})$ on a digital system, the time derivative must be approximated numerically. This is achieved through time discretization, where the continuous evolution of the state is expressed as a difference equation over discrete sampling intervals.  
 \\ \\
+
+
+
+
+
+
+
+
+
+
+
 One of the simplest and most widely used discretization schemes is the forward (Newton-Euler) method.
 $$
     \mathbf{x}_{k+1} \approx \mathbf{x}_k + \Delta t \, f(\mathbf{x}_k, \mathbf{u}_k)
@@ -92,7 +103,31 @@ The EKF prediction and update steps then follow directly from the linearized sys
 $$
     \hat{\mathbf{x}}_{k|k-1} = f_d(\hat{\mathbf{x}}_{k-1|k-1}, \mathbf{u}_{k-1})
 $$
-and the covariance prediction is computed using the linearized Jacobian:
+\\ \\
+However, for the INS motion model, this propagation method can be significantly improved by replacing the simple Newton-Euler forward integration with a more accurate \textit{``hybrid inertial propagation scheme''} that directly integrates IMU measurements over each time step. This approach captures the coupling between rotation, acceleration, and gravity, providing a physically consistent motion update. The discrete time transition function \( f_d(\mathbf{x}_k, \mathbf{u}_k) \) operates on the previous state and control input as defined in Equation \ref{eq:kinematics-motion-model-states}, and evolves according to
+\begin{equation}
+    f_d(\mathbf{x}_k, \mathbf{u}_k) = 
+    \mathbf{x}_{k+1} = 
+    \begin{bmatrix}
+        \mathbf{p}_{b/O_{k+1}}^{n} \\
+        \mathbf{v}_{b/O_{k+1}}^{n} \\ 
+        \mathbf{q}_{k+1} \\ 
+        \mathbf{a}_{b_{k+1}} \\
+        \mathbf{\omega}_{b_{k+1}}
+    \end{bmatrix}
+    =
+    \begin{bmatrix}
+        \mathbf{p}_{b/O_{k}}^{n} + \mathbf{v}_{b/O_{k}}^{n} \Delta t + \frac{1}{2} (R(\mathbf{q}_k) (\mathbf{a}_m - \mathbf{a}_{b_k}) + \mathbf{g}^n) \Delta t^2 \\
+        \mathbf{v}_{b/O_{k}}^{n} + (R(\mathbf{q}_k) (\mathbf{a}_m - \mathbf{a}_{b_k}) + \mathbf{g}^n) \Delta t \\ 
+        \mathbf{q}_{k} \otimes Exp([\mathbf{\omega}_m - \mathbf{\omega}_{b_k}]_{\times} \Delta t) \\ 
+        \mathbf{a}_{b_{k}} - p_{\mathbf{a}b} \mathbf{a}_{b_{k}} \Delta t \\
+        \mathbf{\omega}_{b_{k}} - p_{\mathbf{\omega}b} \mathbf{\omega}_{b_{k}} \Delta t
+    \end{bmatrix}
+    \label{eq:state-estimation-discrete-propagartion}
+\end{equation}
+It can be shown that this discrete propagation arises from integrating the continuous time INS motion equations and discretizing them according to Equation \ref{eq:kinematics-motion-model}. This formulation inherently accounts for rotational motion through quaternion based attitude integration and incorporates gravity in the navigation frame, ensuring physically consistent position and velocity updates. Consequently, this hybrid propagation scheme provides a more accurate and numerically stable prediction model, forming the basis for modern ESKF and preintegration frameworks.
+\\ \\
+Now the covariance prediction is computed using the linearized Jacobian:
 $$
     P_{k|k-1} = F_k P_{k-1|k-1} F_k^\top + Q
 $$
