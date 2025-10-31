@@ -7,10 +7,12 @@
     //"editor.rulers": [100],  // optional guideline
     
     "cSpell.words": [
+        "exteroceptive",
         "Jacobians",
         "linearities",
         "linearizes",
         "Posteriori",
+        "preintegrated",
         "Preintegration"
     ],
 }

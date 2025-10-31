@@ -9,7 +9,8 @@ Also talk about loop closures
 
 produce measurement factors for optimizer
 
-DA - JCBB <3<3<3 or RANSAC <3 or probabalistic techniques (eghhhh questionable)
+DA - Mixture Models <3<3<3<3<3 JCBB <3<3<3 or RANSAC <3 or MTH and probabalistic techniques (eghhhh questionable)
+Ideal using MHT (Multi Hypothesis Theory) => Very robust => However it is very slow, so slow that there is no use case exept of offline uses like simulation and post processing and post analysis. so not a viable strart.
 probabalistic techniques:
   - posterior probability hypothesis (very expensive) 
   - Variations of JPDA (questionable validity)
@@ -20,3 +21,14 @@ This JCBB and RANSAC perfect for stationary objects, but if moving objects it ha
 Landmark measuremnet factor generation
 
 talk about why stayic or relatively static consideration. because tracking targets and mapping environment is super hard and this field is still under very much reaserch for new methods, so DA algorithms concidered here are for near static environments. Witch is fine as bom of the sea floor changes relatively little. also minor changes in environment can be corrected for using robust estimators witch will be briefly duscuseed in optimizer chaper under iSAM2 beyond Gausian assumptions chaper. however higly dynamic environments these algorithms would struggle alone, however under the sea that isn't to big of an issue. so it will sufice with RANSAC and or JCBB
+
+
+UPDATE: Mixture Models is the best solution, just make factors between the landmarks as a mixture and then put into factor graph where it optimizes stuff automatically O-O + also suported by GTSAM jippyyyyy :)))
+
+
+So chapter sugestions:
+- Introduction
+- Mahalanobis Distance
+- RANSAC
+- JCBB
+- Mixture Models <3<3<3

@@ -219,7 +219,7 @@ where
 \begin{equation}
     \mathbf{x} =
     \begin{bmatrix}
-        \mathbf{p}_{b/O}^{n} & \mathbf{v}_{b/O}^{n} & \mathbf{q} & \mathbf{b}_a & \mathbf{b}_g
+        \mathbf{p}_{b/O}^{n} & \mathbf{v}_{b/O}^{n} & \mathbf{q} & \mathbf{a}_b & \mathbf{\omega}_b
     \end{bmatrix}^\top,
     \qquad
     \mathbf{u} =
@@ -228,7 +228,7 @@ where
     \end{bmatrix}^\top
     \label{eq:kinematics-motion-model-states}
 \end{equation}
-Here, $\mathbf{p}_{b/O}^{n}$ and $\mathbf{v}_{b/O}^{n}$ represent the vehicles position and velocity expressed in the navigation frame, $\mathbf{q}$ denotes the attitude quaternion defining the rotation from the body to the navigation frame, and $\mathbf{b}_a$ and $\mathbf{b}_g$ represent the accelerometer and gyroscope biases, respectively. The parameters $p_a = 1/\tau_a$ and $p_g = 1/\tau_g$ correspond to the inverse correlation times governing the exponential decay rates of the bias dynamics.  
+Here, $\mathbf{p}_{b/O}^{n}$ and $\mathbf{v}_{b/O}^{n}$ represent the vehicles position and velocity expressed in the navigation frame, $\mathbf{q}$ denotes the attitude quaternion defining the rotation from the body to the navigation frame, and $\mathbf{a}_b$ and $\mathbf{\omega}_b$ represent the accelerometer and gyroscope biases, respectively. The parameters $p_{\mathbf{a}b} = 1/\tau_a$ and $p_{\mathbf{\omega}b} = 1/\tau_g$ correspond to the inverse correlation times governing the exponential decay rates of the bias dynamics.  
 \\ \\
 This nominal model represents the idealized, noise free motion of the vehicle as inferred from IMU measurements. It captures the deterministic propagation of position, velocity, attitude, and bias under perfect sensor conditions, serving as the baseline dynamic model for integrated navigation systems.  
 \\ \\
