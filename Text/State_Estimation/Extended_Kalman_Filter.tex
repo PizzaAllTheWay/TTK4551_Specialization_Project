@@ -77,17 +77,6 @@ $$
 $$
 To implement the continuous time dynamics $\dot{\mathbf{x}} = f(\mathbf{x}, \mathbf{u})$ on a digital system, the time derivative must be approximated numerically. This is achieved through time discretization, where the continuous evolution of the state is expressed as a difference equation over discrete sampling intervals.  
 \\ \\
-
-
-
-
-
-
-
-
-
-
-
 One of the simplest and most widely used discretization schemes is the forward (Newton-Euler) method.
 $$
     \mathbf{x}_{k+1} \approx \mathbf{x}_k + \Delta t \, f(\mathbf{x}_k, \mathbf{u}_k)
