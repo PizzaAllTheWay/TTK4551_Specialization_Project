@@ -73,14 +73,17 @@ Problem of Loop Closure
   explain method for real time detecting loop closures in feature based SLAM-> use comparison methods for old landmarks to new ones to know when we are close somewhere.
   some similarity check 
   keep all 2D frames of sonar old
-  perform FFT or similarity checks, 
+  perform feature matching algo or similarity checks (We use Descriptor-based matching (more robust) => nearest-neighbor search (NOT nearest neoghbout as in Data Asociation, just nearest value we can find, if it find a value big eough to a set thershold, trigger lol, important to menation this!!!) => (KD-tree) on descriptor vectors for fast compare, use something like OpenCV library) FINAL USE !!!!!!!FLANN Matcher!!!!!!!!!! ALGORITHM! For thsi mention we can use MRPT "nanoflann" function lib to make our lives easier.
+  Also perform periodic triggers just in case to be safe that just check periodically if loop closed lol
   score each comparison
   if 1 comparison a lot bigger score then the rest OR a set threshold has been reached -> then we have loop closure 
+  ALSO have a failsafe trigger, worst case have a periodic trigger that triggers each 50 steps or something to check if loop closure just to be sure if the other thing doesn't trigger lol.
 )
 THEN Integrated DA framework for SLAM
 (
   Each scan:
     run small gating (local) + JCBB
+    check trigger = (similarity checks (FLANN Matcher) + AND Perdioic trigger just in case)
     if loop trigger condition true:
         run large gating (global) + JCBB on old map regioon to verify if it's actually loop closure or not lol
 )
