@@ -7,7 +7,7 @@ The software stack runs on \textit{``Ubuntu 24.04 LTS''} with the \textit{``ROS2
 \\ \\
 A key part of the architecture is precise time synchronization between all onboard computers. The system uses a hardware signal called Pulse Per Second (PPS) from the GNSS modules to align the internal clocks of each computer. This signal marks the exact start of every second and is combined with the GNSS time data to keep all systems synchronized. A background process running in Linux automatically adjusts the system clocks based on this information, ensuring that all sensor data are timestamped with the same reference time. This sub-microsecond synchronization is essential for accurate sensor fusion, navigation, and SLAM.
 \\ \\
-An overview of the complete software architecture and node interconnections is shown in Figure~\ref{fig:microAmpere-software-architecture-overview} down below on the next page.
+An overview of the complete software architecture and node interconnections is shown in Figure \ref{fig:microAmpere-software-architecture-overview} down below on the next page.
 
 \newpage
 

@@ -1,0 +1,6 @@
+\subsection{Cartesian Mapping}
+After swath processing, the sonar data is projected into Cartesian coordinates to form a spatially consistent 2D map of the seafloor. Each pixel is mapped from sonar beam geometry using the current vehicle state estimate and beam angles derived from the transducer geometry.  
+\\ \\
+This step uses the measurement model $h(\mathbf{x})$ to transform each intensity bin from polar coordinates (range, angle) into global $(x,y)$ coordinates. The resulting grid represents local backscatter intensity and is used as the input for feature extraction and mapping. Bilinear interpolation and nearest-neighbor filling are used to address undersampling and maintain uniform grid resolution. The generated map is then timestamped and stored as a local map frame for integration into the SLAM pipeline.
+\\ \\ 
+write about 1/3 rd or old local map being reused and 2/3rds are new map, and that thsi if for blablabla, explain in detail

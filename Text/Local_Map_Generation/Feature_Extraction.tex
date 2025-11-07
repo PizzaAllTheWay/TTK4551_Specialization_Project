@@ -1,0 +1,8 @@
+\subsection{Feature Extraction}
+In this stage, distinctive features are identified from the local Cartesian map to serve as landmarks for data association in SLAM. Feature extraction operates on the intensity map, detecting spatially stable structures such as edges, shadows, or texture gradients.  
+\\ \\
+Common methods include local contrast enhancement, gradient-based edge detection, and blob or corner identification from intensity variation. Candidate landmarks are filtered by geometric constraints and consistency checks to ensure that only stable, persistent features are passed to the SLAM frontend.  
+\\ \\
+Each extracted landmark is stored with its local position, confidence score, and descriptor, forming a compact representation of the local environment. These features are used for association with subsequent maps to maintain global consistency and reduce drift during trajectory estimation.
+\\ \\
+Should also mantion that 1/3 of old map is reused and 2/3rds are new map from the catersian mapping here, already explained in catersian mapping in detail so just refrence to not forget it lol

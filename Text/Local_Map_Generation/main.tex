@@ -1,13 +1,5 @@
 \section{Local Map Generation}
-
-All use State estimates and measuremnt model h() here
-
-Also when generating map locally we build it from sonar 1D images to a 2D recontruction, this takes time and this image is what is then processed and fed into SLAM
-In adition next step we take with the last 1/3rd or the old image and generate a new image that is 2/3 new, this then becomes new 3/3 image that gets fed into SLAM and so forth
-This is done so that data asocaition we dont cut off crucial info between frames and Data Sdociation and landmark detection can extract features again here.
-
-Swath Processing
-
-Cartesian Mapping
-
-Feature Extraction (Landmark Detection)
+\input{Text/Local_Map_Generation/Introduction.tex} \clearpage
+\input{Text/Local_Map_Generation/Swath_Processing.tex} \clearpage
+\input{Text/Local_Map_Generation/Cartesian_Mapping.tex} \clearpage
+\input{Text/Local_Map_Generation/Feature_Extraction.tex} \clearpage

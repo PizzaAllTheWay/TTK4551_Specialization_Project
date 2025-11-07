@@ -284,11 +284,13 @@ to the observed quantities as
     h(\mathbf{x}) =
     \begin{bmatrix}
         \mathbf{p}_{b/O}^{n} + R_b^n(\mathbf{q})\,\mathbf{p}_{\text{GNSS1}/b}^{b} \\
-        \text{atan2}\big((R_b^n(\mathbf{q})\,\mathbf{r}_{1/2}^{b})_y,\,(R_b^n(\mathbf{q})\,\mathbf{r}_{1/2}^{b})_x\big)
-    \end{bmatrix}
+        \psi(\mathbf{q})
+    \end{bmatrix},
+    \qquad
+    \psi(\mathbf{q}) = \text{atan2}\!\big(2(q_w q_z + q_x q_y),\, 1 - 2(q_y^2 + q_z^2)\big)
     \label{eq:aiding-measurement-model}
 \end{equation}
-In this expression, the first component corresponds to the transformed GNSS position measurement, while the second term computes the expected yaw angle $\psi$ from the vehicle attitude quaternion $\mathbf{q}$ and the known baseline vector $\mathbf{r}_{1/2}^{b}$ between antennas in the body frame. The term $\mathbf{n}_{\text{GNSS}}$ represents zero mean Gaussian noise, combining both position and heading measurement uncertainties, with covariance $\mathbf{R}_{\text{GNSS}} = \text{diag}(\mathbf{R}_{p}, \sigma_\psi^2)$.
+In this formulation, the first component represents the transformed GNSS position measurement expressed in the navigation frame, while the second component computes the expected yaw angle $\psi$ directly from the attitude quaternion $\mathbf{q}$. This quaternion based expression provides the same horizontal heading angle as that obtained geometrically from the dual antenna baseline, ensuring a consistent definition of yaw across both the INS and aiding measurement models. The term $\mathbf{n}_{\text{GNSS}}$ denotes zero mean Gaussian noise combining both position and heading uncertainties, with covariance $\mathbf{R}_{\text{GNSS}} = \text{diag}(\mathbf{R}_{p}, \sigma_\psi^2)$.
 \\ \\
 For small autonomous surface vessels such as the MicroAmpere, the platform demonstrates inherently stable roll and pitch dynamics due to its catamaran style pontoon design. This hydrodynamic stability allows the assumption that roll and pitch angles remain close to zero during nominal operation, effectively reducing the attitude representation to a single dominant rotation about the vertical axis, corresponding to the yaw angle. With this simplification, the GNSS aiding measurements primarily correct horizontal position and heading, while small vertical displacements and tilting motions are neglected, as they have minimal impact on overall navigation accuracy.  
 \\ \\
@@ -296,15 +298,77 @@ The dual antenna GNSS configuration therefore provides a compact and robust aidi
 
 
 
-\subsubsection{Model Comparison and Selection}
-The Fossen marine craft kinetic model and the INS kinematic model represent two complementary approaches to describing marine vehicle motion, positioned at opposite ends of the modeling spectrum between kinetic and kinematic formulations. The kinetic, or dynamic, model proposed by Fossen provides a complete physical representation of the vessels motion by explicitly accounting for rigid body dynamics, hydrodynamic effects, added mass, damping, and restoring forces. This yields a high fidelity model suitable for control design, simulation, and performance analysis under varying sea conditions. However, this level of detail comes with considerable complexity, as the model depends on numerous hydrodynamic and inertial parameters that must be carefully identified or experimentally measured.  
+\subsubsection{Landmark Measurement Model}
+The landmark measurement model establishes the mathematical relationship between the ASV pose and observable landmarks within the map. This formulation follows the classical range-bearing model commonly adopted in SLAM literature, as it provides a compact and geometrically consistent way of expressing 2D landmark observations \cite{sensor_fusion_book} \cite{side_scan_sonar_master_thesis}. The choice of the range-bearing model is motivated by its direct correspondence to the type of information available from the processed side scan sonar 2D map, where detected landmarks can be interpreted in terms of their relative distance and angle with respect to the vessels current position.  
 \\ \\
-Conversations with experts in system identification, such as Shenglun Yi from the University of Padova, highlight that while partial parameter identification using recursive or adaptive methods is feasible, obtaining a complete and accurate hydrodynamic parameter set is extremely difficult in practice. Only a few parameters, such as surge damping or longitudinal added mass, can be reliably identified through simplified tests, while the majority require extensive experimentation and highly controlled conditions. As a result, performing full hydrodynamic system identification for small autonomous vessels like the microAmpere would demand substantial effort with limited improvement in navigation performance, making it impractical for this application.  
+The ASV state $\mathbf{x}$ is defined by the INS model presented earlier in Equation \eqref{eq:kinematics-motion-model-states}. From this full state, only the position component $\mathbf{p}_{b/O}^{n}$ and the attitude quaternion $\mathbf{q}$ are required for the landmark observation. The vehicle pose is expressed in the NED frame, while the landmark measurements are expressed relative to the local body frame of the sonar.  
 \\ \\
-On the other hand, the INS based kinematic model provides a simplified but effective alternative. It represents the vessels motion through inertial sensor data, accelerations and angular rates, without explicitly modeling the underlying dynamics or environmental interactions. This makes it computationally efficient and easily implementable, while still providing accurate short term state propagation suitable for SLAM, navigation, and sensor fusion tasks. The model inherently focuses on position, velocity, and attitude evolution, allowing seamless integration with aiding sensors such as GNSS or vision based systems.  
+Let the map contain a set of landmarks $\mathbf{m} = \{ m^1, m^2, \dots, m^N \}$, where each landmark $m^i = [m_x^i, m_y^i, 0]^\top$ is fixed in the NED frame. Although the ASV state $\mathbf{p}_{b/O}^{n} = [x, y, z]^\top$ is fully 3D, the side scan sonar and corresponding landmark map are inherently 2D, describing features on a locally planar surface. Consequently, only the horizontal components $(x, y)$ of both the vehicle position and the landmark locations are relevant for the range-bearing measurement, while variations in depth ($z$) are neglected.  
 \\ \\
-The INS formulation, however, also introduces certain assumptions. One key simplification adopted in this work is that the IMU is positioned close to the vessels COG, effectively neglecting the lever arm effects that arise from angular accelerations acting on sensors offset from the COG. For the microAmpere, this assumption is valid since the IMU is mounted sufficiently close to the COG, minimizing the induced linear acceleration errors and simplifying the overall model structure.  
+The measurement function $h(\mathbf{x}, m^i)$ predicts the expected observation of the $i$-th landmark in the local body frame by transforming it from the navigation frame using the full quaternion rotation matrix $R_n^b(\mathbf{q})$. The expected range and bearing observation is expressed as
+\begin{equation}
+    h(\mathbf{x}, m^i) =
+    \begin{bmatrix}
+        \sqrt{(m_b^i{}_x)^2 + (m_b^i{}_y)^2} \\
+        \mathrm{atan2}(m_b^i{}_y,\, m_b^i{}_x)
+    \end{bmatrix},
+    \qquad
+    m_b^i = R_n^b(\mathbf{q}) \left( m^i - \mathbf{p}_{b/O}^{n} \right)
+    \label{eq:range-bearing-model-deterministic}
+\end{equation}
+This transformation converts the landmark position from the NED frame to the sensors local body frame, ensuring that both range and bearing are expressed relative to the vehicles pose and attitude. Although the full quaternion rotation $R_n^b(\mathbf{q})$ is used for generality, only the planar motion components (surge, sway, yaw) contribute to the range-bearing measurement, while roll and pitch variations are small and can be neglected for the microAmpere ASV.  
 \\ \\
-In conclusion, the INS based kinematic model occupies a balanced position between dynamic completeness and modeling simplicity. It omits the complex hydrodynamic modeling of the kinetic approach but retains sufficient fidelity for accurate state estimation and SLAM applications. For small, stable surface vessels, this trade off provides the optimal compromise between accuracy, computational efficiency, and practical feasibility, making the INS based formulation the preferred choice for this thesis.
+The range-bearing model provides an effective framework for representing side scan sonar landmark measurements, where image features such as rocks, seabed edges, or submerged structures are interpreted as discrete landmarks. Each detection is expressed as $\mathbf{z}^i = [z_r^i, z_\theta^i]^\top$, corresponding to the range and bearing of a landmark relative to the locally generated 2D sonar map.  
+\\ \\
+In practical conditions, the sonar measurement is influenced by several environmental and geometric factors. The intensity and detectability of a landmark strongly depend on the incidence angle between the sonar beam and the surface normal of the object. At near normal incidence, strong reflections occur, while at grazing angles, reflections weaken due to scattering and shadowing effects. In addition, local sound speed variations caused by temperature and salinity gradients introduce refraction, bending the acoustic path and altering the apparent range of the detected feature.  
+\\ \\
+To capture environmental and geometric effects, the deterministic model in Equation \eqref{eq:range-bearing-model-deterministic} is extended with both stochastic noise and an angle and range dependent disturbance term. The complete measurement model is formulated as
+\begin{equation}
+    h_{\text{noisy}}(\mathbf{x}, m^i) = h(\mathbf{x}, m^i) + \Delta h(\mathbf{x}, m^i, \phi_i) + \mathbf{v}^i(r_i)
+    \label{eq:range-bearing-model-extended}
+\end{equation}
+where $h(\mathbf{x}, m^i)$ is the deterministic range-bearing model defined in \eqref{eq:range-bearing-model-deterministic}, $\Delta h(\mathbf{x}, m^i, \phi_i)$ represents systematic disturbances caused by angle dependent reflection and refraction, and $\mathbf{v}^i(r_i)$ is a zero mean Gaussian noise term with range dependent covariance.  
+\\ \\
+The local incidence angle $\phi_i$ is defined as the angle between the sonar beam direction and the line of sight to the landmark in the body frame, computed as
+$$
+    \phi_i = \mathrm{atan2}(m_b^i{}_y,\, m_b^i{}_x),
+    \qquad
+    m_b^i = R_n^b(\mathbf{q}) \left( m^i - \mathbf{p}_{b/O}^{n} \right)
+$$
+where $R_n^b(\mathbf{q})$ transforms the landmark position from the navigation frame to the body frame. The angle $\phi_i$ varies with the ASV yaw orientation and thus changes as the same landmark is viewed from different headings, directly influencing reflection strength and measurement geometry.  
+\\ \\
+The angle dependent disturbance term $\Delta h(\mathbf{x}, m^i, \phi_i)$ models systematic deviations due to incidence effects and is approximated as
+$$
+    \Delta h(\mathbf{x}, m^i, \phi_i) \approx
+    \begin{bmatrix}
+        \kappa_r (1 - \cos{\phi_i}) \\
+        \kappa_\theta \sin{\phi_i}
+    \end{bmatrix}
+$$
+where $\kappa_r$ and $\kappa_\theta$ are empirically tuned parameters describing the sensitivity of range and bearing to the incidence angle. The range component decreases for grazing angles due to weaker reflections and shadowing, while the bearing component introduces a small angular bias from asymmetric scattering.  
+\\ \\
+The stochastic noise term $\mathbf{v}^i(r_i) = [v_r^i, v_\theta^i]^\top$ represents random measurement uncertainty that approximately increases with the distance to the observed landmark. The landmark position in the body frame and the corresponding predicted range are obtained as
+$$
+    r_i = \sqrt{(m_b^i{}_x)^2 + (m_b^i{}_y)^2}, 
+    \qquad 
+    m_b^i = R_n^b(\mathbf{q}) \left( m^i - \mathbf{p}_{b/O}^{n} \right)
+$$
+and the range dependent measurement covariance is approximated by
+$$
+    \mathbf{R}_z(r_i) \approx
+    \begin{bmatrix}
+        \sigma_r^2(1 + \alpha_r r_i^2) & 0 \\
+        0 & \sigma_\theta^2(1 + \alpha_\theta r_i^2)
+    \end{bmatrix}
+$$
+where $\sigma_r$ and $\sigma_\theta$ represent the nominal standard deviations of the range and bearing measurements at close distance, while $\alpha_r$ and $\alpha_\theta$ are empirical scaling factors that approximate how these uncertainties grow quadratically with increasing range due to acoustic attenuation, multipath effects, and beam spreading.
 
+
+
+\subsubsection{Model Comparison and Selection}
+The modeling framework combines two complementary representations, the Fossen kinetic model for high fidelity dynamics and the INS based kinematic model for efficient state propagation. The kinetic model provides a complete physical description including rigid body dynamics, hydrodynamic effects, and restoring forces, making it suitable for control design and dynamic analysis. However, its use requires extensive parameter identification that is impractical for small autonomous vessels, where only a limited subset of hydrodynamic coefficients can be reliably estimated.  
+\\ \\
+The INS based kinematic model offers a simplified alternative focused on direct propagation of position, velocity, and attitude from inertial measurements. It removes the dependency on hydrodynamic parameters, enabling lightweight and robust integration with aiding sensors such as GNSS. The assumption that the IMU is located near the center of gravity minimizes lever arm effects, making this approach sufficiently accurate for navigation, SLAM, and control tasks. For these reasons, the INS formulation is adopted as the primary motion model in this thesis, providing an optimal trade off between model fidelity, computational cost, and implementation simplicity.  
+\\ \\
+Similarly, for landmark sensing, the deterministic range-bearing model is sufficient for basic experiments or low noise environments. In contrast, the extended model accounts for incidence angle and range dependent effects, providing a more realistic representation of sonar measurement behavior under varying environmental and geometric conditions. The choice between models therefore depends on the desired accuracy and computational constraints, with the extended formulation preferred for high fidelity SLAM or sonar mapping applications.
 

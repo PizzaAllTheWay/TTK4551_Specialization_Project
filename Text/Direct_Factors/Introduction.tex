@@ -1,0 +1,12 @@
+\subsection{Introduction}
+In contrast to complex factors such as odometry or landmark constraints that require state propagation, data association, or nonlinear optimization, some sensor measurements can be directly converted into factor graph constraints with minimal processing.  
+\\ \\
+These are referred to as \textit{direct factors}. They provide immediate information about the system state, typically through absolute measurements such as position or orientation.  
+\\ \\
+For the microAmpere ASV, one of the main direct factors is the GNSS factor, which directly relates the estimated vehicle pose to globally referenced position and heading measurements obtained from the dual antenna GNSS system.
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1.0\linewidth]{Pictures/Direct_Factors/Introduction/GNSS_Factor.png}
+    \caption{Example of a direct factor graph structure, where a GNSS factor provides an absolute position and heading constraint directly linked to the pose/odometry node.\textsuperscript{\cite{GNSS_Factor}}}
+    \label{fig:direct-factors-gnss-factor-example}
+\end{figure}

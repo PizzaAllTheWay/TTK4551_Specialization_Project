@@ -37,3 +37,51 @@ So chapter sugestions:
 - JCBB
 - Mixture Models 
 - Discussion
+
+
+
+
+
+
+
+======================================
+
+
+
+
+
+
+
+
+into chaper
+start with GATING chaper (
+  mahalanobis in there, define mahalanobis distance as 
+  $||x-mu||_P=sqrt((x-mu)^T*P^(-1)*(x-mu))$
+  this will later be cited in iSAM part
+)
+then NN
+Then probabalistic methods 
+(
+  discuss PDA, JIPDA, MHT, just main stuff no need to go into math as they will not be used
+)
+Then RANSAC
+then JCBB
+Problem of Loop Closure
+(
+  explain that one could run fastJCBB globally, but the shit would explode exponentially, so instead to make it real time need local (filter DA) vs global (loop closure DA) approach. this means the thing is fast.
+  but now question is how do we know when there is a loop closure as we no longer have global DA, need a different way to keep track of global map in a more effective way than DA. Something that doesn't need to be precise, just fast, so we might get false global assumptions but then the global DA can handle those, at least we will not be running global DA every time if we are smart about it and design a method that doesn't have to many false positives to keep it real time.
+  explain method for real time detecting loop closures in feature based SLAM-> use comparison methods for old landmarks to new ones to know when we are close somewhere.
+  some similarity check 
+  keep all 2D frames of sonar old
+  perform FFT or similarity checks, 
+  score each comparison
+  if 1 comparison a lot bigger score then the rest OR a set threshold has been reached -> then we have loop closure 
+)
+THEN Integrated DA framework for SLAM
+(
+  Each scan:
+    run small gating (local) + JCBB
+    if loop trigger condition true:
+        run large gating (global) + JCBB on old map regioon to verify if it's actually loop closure or not lol
+)
+then factor construction

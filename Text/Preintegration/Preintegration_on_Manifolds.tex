@@ -229,28 +229,49 @@ $$
     \end{bmatrix}
 $$
 This small angle approximation allows attitude uncertainty to be represented in a minimal 3D tangent space, preserving the quaternion manifold structure while maintaining linear error propagation.
-\paragraph{Continuous Time Error Dynamics} \mbox{}\\[0.5em] \noindent
-The continuous time linearized error dynamics for the preintegration process directly mirror the first three block rows of the ESKF system matrix $A(\mathbf{x})$ in Equation \ref{eq:state-estimation-error-state-linear-time-varying-matrices}. Neglecting the bias terms yields:
+\paragraph{Continuous Time Error Dynamics} \mbox{}\\[0.5em] \noindent  
+The continuous time error dynamics describe how small perturbations in position, velocity, and attitude evolve under the influence of IMU noise. These equations are not used to compute the nominal motion itself, only to propagate covariance and track how uncertainty grows over time.  
+\\ \\
+The reduced error state is defined as  
 $$
-    \delta \dot{\mathbf{x}}(t) = A(t)\delta \mathbf{x}(t) + B(t)\mathbf{n}(t)
-$$
-with
-$$
-    A(t) =
+    \delta\mathbf{x}(t) =
     \begin{bmatrix}
-        0 & I_3 & 0 \\
-        0 & 0 & -R_i^\top R(t)[\mathbf{a}_m(t) - \mathbf{a}_b]_\times \\
-        0 & 0 & -[\boldsymbol{\omega}_m(t) - \boldsymbol{\omega}_b]_\times
-    \end{bmatrix},
-    \qquad
-    B(t) =
-    \begin{bmatrix}
-        0 & 0 \\
-        -R_i^\top R(t) & 0 \\
-        0 & -I_3
+        \delta \mathbf{p}(t) \\
+        \delta \mathbf{v}(t) \\
+        \delta \boldsymbol{\phi}(t)
     \end{bmatrix}
 $$
-Here $R_i^\top R(t)$ represents the relative rotation between the start keyframe $i$ and the current IMU orientation $R(t)$, ensuring that all quantities remain expressed in the local frame of keyframe $i$. The noise term $\mathbf{n}(t) = [\mathbf{n}_a, \mathbf{n}_\omega]^\top$ corresponds to the same white Gaussian IMU noise components used in the ESKF process model.
+where $\delta\mathbf{p}$, $\delta\mathbf{v}$, and $\delta\boldsymbol{\phi}$ are small perturbations in position, velocity, and attitude. The attitude error $\delta\boldsymbol{\phi}$ lies in the tangent space of $SO(3)$ and locally perturbs the nominal rotation as  
+$$
+    R(\mathbf{q}) = \hat{R}(\mathbf{q})\exp([\delta\boldsymbol{\phi}]_\times)
+$$
+This represents a minimal 3D error model that allows linear propagation of orientation uncertainty while preserving the manifold constraint.  
+\\ \\
+The linearized error dynamics follow the first three block rows of the ESKF system matrix in Equation \ref{eq:state-estimation-error-state-linear-time-varying-matrices}, excluding bias terms:  
+$$
+    \delta \dot{\mathbf{x}}(t) = A(\mathbf{x})\,\delta \mathbf{x}(t) + G(\mathbf{x})\,\mathbf{n}(t)
+$$
+where $\mathbf{n}(t) = [\mathbf{n}_a,\, \mathbf{n}_\omega]^\top$ represents zero-mean white Gaussian accelerometer and gyroscope noise.  
+\\ \\
+The system matrices are  
+\begin{equation}
+    A(\mathbf{x}) =
+    \begin{bmatrix}
+        0 & I_3 & 0 \\
+        0 & 0 & -R_i^\top R(\mathbf{q})[\mathbf{a}_m - \mathbf{a}_b]_\times \\
+        0 & 0 & -[\boldsymbol{\omega}_m - \boldsymbol{\omega}_b]_\times
+    \end{bmatrix},
+    \quad
+    G(\mathbf{x}) =
+    \begin{bmatrix}
+        0 & 0 \\
+        -R_i^\top R(\mathbf{q}) & 0 \\
+        0 & -I_3
+    \end{bmatrix}
+\end{equation}
+Here $R_i^\top R(\mathbf{q})$ gives the relative rotation between the start keyframe $i$ and the current IMU orientation, ensuring that all quantities remain expressed in the local frame of keyframe $i$.  
+\\ \\
+Although the true error states $\delta\mathbf{x}$ are never explicitly computed, the corresponding linearized dynamics through $A(\mathbf{x})$ and $G(\mathbf{x})$ are used to propagate the covariance over time. This provides an efficient and consistent way to capture the growth of IMU induced uncertainty between keyframes.  
 \paragraph{Discretization and Covariance Propagation} \mbox{}\\[0.5em] \noindent
 As discussed in in previous chapters under State Estimation in ESKF discretization section (See Equation \ref{eq:state-estimation-error-state-dynamics-discretized}), discretization of the continuous error dynamics is necessary for digital implementation. Similar to the ESKF, the Zero Order Hold (ZOH) method can be applied here, or similar methods, assuming the IMU inputs and noise remain constant within each sampling interval $\Delta t$. The discrete time covariance propagation is therefore given by
 $$

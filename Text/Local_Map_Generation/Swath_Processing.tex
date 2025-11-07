@@ -1,0 +1,5 @@
+\subsection{Swath Processing}
+This subsection covers the transformation of raw sonar returns into corrected intensity swaths. The raw data, typically received as a time-series of acoustic amplitudes per ping, undergoes preprocessing to remove noise, compensate for sensor orientation, and correct for acoustic geometry.  
+\\ \\
+The steps include pitch and roll correction using IMU data, blind zone removal near the nadir, and slant-range correction to flatten the seafloor projection. Intensity normalization is applied to compensate for range-dependent attenuation and transducer gain. The processed swaths are then stacked sequentially to form an intermediate waterfall image representing relative backscatter strength as a function of time and across-track distance.
+
