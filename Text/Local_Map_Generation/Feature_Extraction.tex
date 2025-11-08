@@ -1,4 +1,16 @@
 \subsection{Feature Extraction}
+On the Cartesian map, features are extracted for SLAM:
+
+Simple thresholding and geometric filtering (Hoff 2024 [18], Haralstad 2023 Ch. 6):
+
+High-intensity = echoes (raised objects).
+
+Low-intensity + shape = shadows (depressions).
+
+Apply morphological or region filters to reject noise.
+
+Estimate height or semantic class from echo–shadow geometry.
+
 In this stage, distinctive features are identified from the local Cartesian map to serve as landmarks for data association in SLAM. Feature extraction operates on the intensity map, detecting spatially stable structures such as edges, shadows, or texture gradients.  
 \\ \\
 Common methods include local contrast enhancement, gradient-based edge detection, and blob or corner identification from intensity variation. Candidate landmarks are filtered by geometric constraints and consistency checks to ensure that only stable, persistent features are passed to the SLAM frontend.  
@@ -15,3 +27,14 @@ Features of ineterst are (corners, blobs, texture-rich areas) that are:
 - Partially invariant to illumination (robust to brightness and contrast changes — important for sonar)
 \\ \\
 Aditional chapter we must write is to add Descriptors to feature eaxtraction, when extracting features we also add featuers ecause when doing feature mathing it is very cheap and fast way to do it jesjes. Basically in eac feature encode some aditional description. Baiscally a simple way that is effective to mathc diffreent features afterwards in an effective way jesjes. Have a dicssripition making chapter so that if can be used later in FLANN Mattching algorithm or something. SO have them Descriptors generated like that. They dont do that in the Matsers before because tehy did glovbal Data Asocaiteion with is expensive on each run, will be described later, but descriptors do help with this yesyes.
+\\ \\
+ALso asume near static map, otherwise these algos would have to be replaced with AI shit and stuff X-X
+\\ \\
+Use range and bearing to give the z measuremnt ie landmarks jesjes.
+\\ \\
+Also probabalixtic map shoudl be here like first take in the cartesian map and then convert it into probabalistic heat map gausian shit before doing featuer extraction shit
+\\ \\
+\subsubsection{Probabilistic Map}
+Instead of assigning each sonar bin to a single pixel, each measurement contributes to a continuous likelihood field centered at its projected ground coordinate. This is modeled as a Gaussian footprint, where the sonar intensity defines the likelihood amplitude and the standard deviation reflects measurement uncertainty. Neighboring cells are weighted according to their distance from the beam center, distributing the signal smoothly across the map.
+\\ \\
+This probabilistic formulation reduces speckle noise, compensates for uneven sampling density, and improves map consistency compared to discrete binning. The resulting map represents a spatial probability distribution of seabed reflectivity, providing a more stable input for feature extraction and correlation-based SLAM alignment. This method follows the probabilistic mapping framework proposed by Hoff (2024) and Haraldstad (2023), offering high mapping accuracy while remaining computationally feasible for real-time embedded sonar systems.

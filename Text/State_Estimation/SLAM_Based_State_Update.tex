@@ -9,11 +9,11 @@ The only required adjustment concerns the attitude representation. The state est
 \\ \\
 The SLAM update step is then straightforward. The measurement model is defined as
 $$
-    h(\mathbf{x}) = I,
+    h(\mathbf{x}) = I
 $$
 with the measurement noise covariance taken directly from the SLAM pose uncertainty,
 $$
-    \mathbf{R} = \mathbf{P}_{SLAM}.
+    \mathbf{R} = \mathbf{P}_{SLAM}
 $$
 If the Jacobian of the measurement model is required, it simplifies to $H = I$. This makes the correction step efficient and direct, allowing the global SLAM pose to realign the estimated navigation state and compensate for accumulated drift with minimal computational cost.
 
