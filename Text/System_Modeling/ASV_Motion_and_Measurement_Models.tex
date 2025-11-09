@@ -320,24 +320,37 @@ This transformation converts the landmark position from the NED frame to the sen
 \\ \\
 The range-bearing model provides an effective framework for representing side scan sonar landmark measurements, where image features such as rocks, seabed edges, or submerged structures are interpreted as discrete landmarks. Each detection is expressed as $\mathbf{z}^i = [z_r^i, z_\theta^i]^\top$, corresponding to the range and bearing of a landmark relative to the locally generated 2D sonar map.  
 \\ \\
-In practical conditions, the sonar measurement is influenced by several environmental and geometric factors. The intensity and detectability of a landmark strongly depend on the incidence angle between the sonar beam and the surface normal of the object. At near normal incidence, strong reflections occur, while at grazing angles, reflections weaken due to scattering and shadowing effects. In addition, local sound speed variations caused by temperature and salinity gradients introduce refraction, bending the acoustic path and altering the apparent range of the detected feature.  
+In practical conditions, the sonar measurement is influenced by several environmental and geometric factors. The intensity and detectability of a landmark strongly depend on the incidence angle between the sonar beam and the surface normal of the object. At near normal incidence, strong reflections occur, while at grazing angles, reflections weaken due to scattering and shadowing effects. In addition, local sound speed variations caused by temperature and salinity gradients introduce refraction, bending the acoustic path and altering the apparent range of the detected feature.
 \\ \\
-To capture environmental and geometric effects, the deterministic model in Equation \eqref{eq:range-bearing-model-deterministic} is extended with both stochastic noise and an angle and range dependent disturbance term. The complete measurement model is formulated as
+To account for both environmental and geometric effects, the deterministic range bearing model in Equation \eqref{eq:range-bearing-model-deterministic} is extended with a systematic correction term and a stochastic noise component.  
+\\ \\
+The measurement model relates the observed landmark measurement $\mathbf{z}^i$ to its predicted observation based on the current vehicle state $\mathbf{x}$ and the landmark position $m^i$. It is expressed as
 \begin{equation}
-    h_{\text{noisy}}(\mathbf{x}, m^i) = h(\mathbf{x}, m^i) + \Delta h(\mathbf{x}, m^i, \phi_i) + \mathbf{v}^i(r_i)
+    \begin{bmatrix}
+        z_r^i \\
+        z_\theta^i
+    \end{bmatrix} = 
+    \mathbf{z}^i = h_{\text{corr}}(\mathbf{x}, m^i) + \boldsymbol{\nu}^i
+    \label{eq:range-bearing-measurement-model}
+\end{equation}
+where $\mathbf{z}^i = [z_r^i, z_\theta^i]^\top$ denotes the measured range and bearing of the $i$-th landmark, and $\boldsymbol{\nu}^i$ represents the stochastic measurement noise.  
+\\ \\
+The predicted or expected landmark observation is described by the corrected deterministic measurement model
+\begin{equation}
+    h_{\text{corr}}(\mathbf{x}, m^i) = h(\mathbf{x}, m^i) + \Delta h(\mathbf{x}, m^i, \phi_i)
     \label{eq:range-bearing-model-extended}
 \end{equation}
-where $h(\mathbf{x}, m^i)$ is the deterministic range-bearing model defined in \eqref{eq:range-bearing-model-deterministic}, $\Delta h(\mathbf{x}, m^i, \phi_i)$ represents systematic disturbances caused by angle dependent reflection and refraction, and $\mathbf{v}^i(r_i)$ is a zero mean Gaussian noise term with range dependent covariance.  
+where $h(\mathbf{x}, m^i)$ is the nominal geometric prediction of range and bearing based solely on the vehicle pose and landmark position as defined in Equation \eqref{eq:range-bearing-model-deterministic}. The term $\Delta h(\mathbf{x}, m^i, \phi_i)$ introduces a deterministic correction that compensates for angle dependent reflection and refraction effects, while $\phi_i$ denotes the local incidence angle between the sonar beam and the line of sight to the landmark. The remaining term $\boldsymbol{\nu}^i$ models zero mean Gaussian noise with range dependent covariance $\mathbf{R}_z(r_i)$, representing the random uncertainty in the measurement. Together, these components define how the actual landmark observation $\mathbf{z}^i$ deviates from the ideal geometric prediction due to both deterministic environmental effects and stochastic sensor noise.
 \\ \\
-The local incidence angle $\phi_i$ is defined as the angle between the sonar beam direction and the line of sight to the landmark in the body frame, computed as
+The local incidence angle $\phi_i$ is defined as the angle between the sonar beam direction and the line of sight to the landmark in the body frame:
 $$
     \phi_i = \mathrm{atan2}(m_b^i{}_y,\, m_b^i{}_x),
     \qquad
     m_b^i = R_n^b(\mathbf{q}) \left( m^i - \mathbf{p}_{b/O}^{n} \right)
 $$
-where $R_n^b(\mathbf{q})$ transforms the landmark position from the navigation frame to the body frame. The angle $\phi_i$ varies with the ASV yaw orientation and thus changes as the same landmark is viewed from different headings, directly influencing reflection strength and measurement geometry.  
+where $R_n^b(\mathbf{q})$ transforms the landmark position from the navigation to the body frame. This angle changes with the ASV yaw and influences both reflection strength and measurement bias.  
 \\ \\
-The angle dependent disturbance term $\Delta h(\mathbf{x}, m^i, \phi_i)$ models systematic deviations due to incidence effects and is approximated as
+The correction term $\Delta h(\mathbf{x}, m^i, \phi_i)$ models this deterministic bias and is approximated as
 $$
     \Delta h(\mathbf{x}, m^i, \phi_i) \approx
     \begin{bmatrix}
@@ -345,23 +358,20 @@ $$
         \kappa_\theta \sin{\phi_i}
     \end{bmatrix}
 $$
-where $\kappa_r$ and $\kappa_\theta$ are empirically tuned parameters describing the sensitivity of range and bearing to the incidence angle. The range component decreases for grazing angles due to weaker reflections and shadowing, while the bearing component introduces a small angular bias from asymmetric scattering.  
+where $\kappa_r$ and $\kappa_\theta$ are empirically tuned parameters that describe how range and bearing measurements vary with incidence angle. The range component reduces for grazing angles due to weaker echoes, while the bearing term introduces a small angular offset caused by asymmetric scattering.  
 \\ \\
-The stochastic noise term $\mathbf{v}^i(r_i) = [v_r^i, v_\theta^i]^\top$ represents random measurement uncertainty that approximately increases with the distance to the observed landmark. The landmark position in the body frame and the corresponding predicted range are obtained as
-$$
-    r_i = \sqrt{(m_b^i{}_x)^2 + (m_b^i{}_y)^2}, 
-    \qquad 
-    m_b^i = R_n^b(\mathbf{q}) \left( m^i - \mathbf{p}_{b/O}^{n} \right)
-$$
-and the range dependent measurement covariance is approximated by
-$$
-    \mathbf{R}_z(r_i) \approx
+The random noise component is modeled as
+\begin{equation}
+    \boldsymbol{\nu}^i \sim \mathcal{N}(\mathbf{0}, \mathbf{R}_{sonar}(r_i)),
+    \qquad
+    \mathbf{R}_{sonar}(r_i) =
     \begin{bmatrix}
         \sigma_r^2(1 + \alpha_r r_i^2) & 0 \\
         0 & \sigma_\theta^2(1 + \alpha_\theta r_i^2)
     \end{bmatrix}
-$$
-where $\sigma_r$ and $\sigma_\theta$ represent the nominal standard deviations of the range and bearing measurements at close distance, while $\alpha_r$ and $\alpha_\theta$ are empirical scaling factors that approximate how these uncertainties grow quadratically with increasing range due to acoustic attenuation, multipath effects, and beam spreading.
+    \label{eq:range-bearing-model-extended-noise}
+\end{equation}
+where $r_i = \sqrt{(m_b^i{}_x)^2 + (m_b^i{}_y)^2}$ is the predicted landmark range. The parameters $\sigma_r$ and $\sigma_\theta$ represent the nominal measurement noise at short distance, while $\alpha_r$ and $\alpha_\theta$ model the range dependent growth in uncertainty due to acoustic attenuation, multipath effects, and beam spreading.  
 
 
 

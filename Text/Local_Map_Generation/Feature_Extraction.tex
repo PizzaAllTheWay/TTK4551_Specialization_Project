@@ -1,40 +1,104 @@
 \subsection{Feature Extraction}
-On the Cartesian map, features are extracted for SLAM:
+\subsubsection{Landmarks}
+Once the local Cartesian map has been constructed, the next step is to identify distinct and stable features on the seafloor that can act as landmarks for SLAM. These landmarks represent repeatable acoustic structures, typically strong echoes or shadows, that remain visible across consecutive local maps and can therefore be used for consistent data association and vehicle localization.  
+\\ \\
+The process converts the local reflectivity map into a probabilistic representation to handle sonar noise and spatial uncertainty. From this smoothed intensity field, locally dominant regions are extracted as potential landmarks based on their acoustic contrast and geometric stability. High intensity compact regions correspond to echoes from raised or reflective surfaces, while elongated low intensity areas indicate acoustic shadows caused by occlusions or terrain depressions.  
+\\ \\
+Each detected landmark is assigned a centroid position in the local Cartesian frame and a compact descriptor summarizing its surrounding intensity and texture pattern. These descriptors enable efficient and robust landmark matching across consecutive local maps using nearest neighbor search techniques later used in Data Association part.  
+\\ \\
+For integration with SLAM, every landmark is expressed as a measurement in range and bearing relative to the vehicle,  
+$$
+    \mathbf{z}^i = [z_r^i, z_\theta^i]^\top
+$$
+as defined by the measurement model in Equation \ref{eq:range-bearing-measurement-model}. This links the vehicle state to corresponding environmental landmarks through the measurement function $h_{\text{corr}}(\mathbf{x}, m^i)$ (See Equations \ref{eq:range-bearing-model-extended} and \ref{eq:range-bearing-model-deterministic}).
+\\ \\
+Each extracted landmark is stored together with its descriptor, position, and confidence score, forming the interface between the local mapping process and the SLAM data association stage, which determines whether the landmark corresponds to a previously known feature or a newly observed one. 
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\linewidth]{Pictures/Local_Map_Generation/Feature_Extraction/landmark_measurement_example.png}
+    \caption{Landmark detection and range-bearing formulation relative to the vehicle position.}
+    \label{fig:local-map-generation-landmark-measurement-example}
+\end{figure}
 
-Simple thresholding and geometric filtering (Hoff 2024 [18], Haralstad 2023 Ch. 6):
 
-High-intensity = echoes (raised objects).
 
-Low-intensity + shape = shadows (depressions).
 
-Apply morphological or region filters to reject noise.
 
-Estimate height or semantic class from echo–shadow geometry.
 
-In this stage, distinctive features are identified from the local Cartesian map to serve as landmarks for data association in SLAM. Feature extraction operates on the intensity map, detecting spatially stable structures such as edges, shadows, or texture gradients.  
-\\ \\
-Common methods include local contrast enhancement, gradient-based edge detection, and blob or corner identification from intensity variation. Candidate landmarks are filtered by geometric constraints and consistency checks to ensure that only stable, persistent features are passed to the SLAM frontend.  
-\\ \\
-Each extracted landmark is stored with its local position, confidence score, and descriptor, forming a compact representation of the local environment. These features are used for association with subsequent maps to maintain global consistency and reduce drift during trajectory estimation.
-\\ \\
-Should also mantion that 1/3 of old map is reused and 2/3rds are new map from the catersian mapping here, already explained in catersian mapping in detail so just refrence to not forget it lol
-\\ \\
-Feature extraction algorithm to know: SIFT! BUT Its to many false positives and negatives acording to Vegard paper so then use their cusom method.
-Mention the HUgen paper that has:
-Features of ineterst are (corners, blobs, texture-rich areas) that are:
-- invariant to scale (works even if the same object appears larger/smaller),
-- Invariant to rotation (works regardless of camera/vehicle angle),
-- Partially invariant to illumination (robust to brightness and contrast changes — important for sonar)
-\\ \\
-Aditional chapter we must write is to add Descriptors to feature eaxtraction, when extracting features we also add featuers ecause when doing feature mathing it is very cheap and fast way to do it jesjes. Basically in eac feature encode some aditional description. Baiscally a simple way that is effective to mathc diffreent features afterwards in an effective way jesjes. Have a dicssripition making chapter so that if can be used later in FLANN Mattching algorithm or something. SO have them Descriptors generated like that. They dont do that in the Matsers before because tehy did glovbal Data Asocaiteion with is expensive on each run, will be described later, but descriptors do help with this yesyes.
-\\ \\
-ALso asume near static map, otherwise these algos would have to be replaced with AI shit and stuff X-X
-\\ \\
-Use range and bearing to give the z measuremnt ie landmarks jesjes.
-\\ \\
-Also probabalixtic map shoudl be here like first take in the cartesian map and then convert it into probabalistic heat map gausian shit before doing featuer extraction shit
-\\ \\
+
+
+
+
+
+
 \subsubsection{Probabilistic Map}
-Instead of assigning each sonar bin to a single pixel, each measurement contributes to a continuous likelihood field centered at its projected ground coordinate. This is modeled as a Gaussian footprint, where the sonar intensity defines the likelihood amplitude and the standard deviation reflects measurement uncertainty. Neighboring cells are weighted according to their distance from the beam center, distributing the signal smoothly across the map.
+To handle sonar uncertainty and speckle noise, the Cartesian reflectivity grid is converted into a probabilistic representation. Each sonar return contributes to a likelihood field centered at its ground-projected position:
+\begin{equation}
+    P(x, y) = \hat{R}(x, y)
+    \exp\!\left(-\frac{(x - x_k)^2 + (y - y_k)^2}{2\sigma^2}\right)
+\end{equation}
+where $\hat{R}(x, y)$ is the normalized backscatter intensity (see Equation~\ref{eq:cartesian-mapping-knn}), and $\sigma$ defines spatial uncertainty based on sonar footprint and beam geometry.  
 \\ \\
-This probabilistic formulation reduces speckle noise, compensates for uneven sampling density, and improves map consistency compared to discrete binning. The resulting map represents a spatial probability distribution of seabed reflectivity, providing a more stable input for feature extraction and correlation-based SLAM alignment. This method follows the probabilistic mapping framework proposed by Hoff (2024) and Haraldstad (2023), offering high mapping accuracy while remaining computationally feasible for real-time embedded sonar systems.
+This continuous likelihood formulation smooths local variations and creates a probabilistic surface from which stable landmark features can be extracted.
+
+
+
+\subsubsection{Landmark Detection}
+Landmarks are detected by locating locally dominant responses in the probabilistic map, where the likelihood or its gradient exceeds a predefined threshold relative to neighboring cells.  
+\\ \\
+Two feature types are considered:
+\begin{itemize}
+    \item \textbf{Echo landmarks:} bright compact regions representing strong reflectors or raised objects.
+    \item \textbf{Shadow landmarks:} elongated dark regions caused by acoustic occlusion or terrain depressions.
+\end{itemize}
+Morphological filtering removes noise and merges overlapping responses. Each valid landmark is represented by its centroid position $\mathbf{p}_L = [x_L, y_L]^\top$ in the local Cartesian map frame.
+
+
+
+\subsubsection{Landmark Measurement}
+Since both the vehicle and the landmarks are defined in the same local Cartesian frame, the vehicle origin coincides with $(0,0)$, and its heading aligns with the $x$-axis. The landmark measurement therefore simplifies to:
+\begin{equation}
+    \mathbf{z}^i =
+    \begin{bmatrix}
+        z_r^i \\ z_\theta^i
+    \end{bmatrix}
+    =
+    \begin{bmatrix}
+        \sqrt{x_L^2 + y_L^2} \\
+        \mathrm{atan2}(y_L,\, x_L)
+    \end{bmatrix}
+\end{equation}
+This gives the direct range and bearing from the vehicle to each landmark, without requiring frame transformations. The measurement $\mathbf{z}^i$ corresponds to the expected observation model $h(\mathbf{x}, \mathbf{m})$ used in SLAM (see Equation~\ref{eq:range-bearing-measurement-model}).
+
+
+
+\subsubsection{Landmark Measurement Uncertainty}
+Each measurement $\mathbf{z}^i$ is associated with a covariance matrix $\mathbf{R}_{z_i}$ describing its uncertainty in range and bearing.  
+\\ \\
+Following the range-dependent noise model in Equation~\ref{eq:range-bearing-model-extended-noise}, the covariance is:
+\begin{equation}
+    \mathbf{R}_{z_i} =
+    \begin{bmatrix}
+        \sigma_r^2(1 + \alpha_r z_r^{i\,2}) & 0 \\
+        0 & \sigma_\theta^2(1 + \alpha_\theta z_r^{i\,2})
+    \end{bmatrix}
+\end{equation}
+where $\sigma_r$ and $\sigma_\theta$ represent the base noise levels, while $\alpha_r$ and $\alpha_\theta$ account for the range-dependent increase in uncertainty caused by beam spreading and acoustic attenuation.
+
+
+
+\subsubsection{Descriptor Assignment}
+Each detected landmark is assigned a descriptor encoding its local reflectivity and texture characteristics:
+\begin{equation}
+    \mathbf{d}_L = [\mu_I,\, \sigma_I,\, \nabla I_x,\, \nabla I_y,\, \text{entropy},\, \text{contrast}]
+\end{equation}
+where $\mu_I$ and $\sigma_I$ are the mean and variance of the intensity patch around the landmark. These descriptors allow for efficient nearest-neighbor matching using FLANN or similar kNN-based methods, enabling fast and robust feature association between consecutive local maps.
+
+
+
+\subsubsection{Landmark Output}
+The final output of the feature extraction module consists of validated landmarks, each described by:
+\[
+    \mathcal{L}_i = \{\mathbf{z}^i,\, \mathbf{R}_{z_i},\, \mathbf{d}_L\}
+\]
+This minimal representation provides all required information for the SLAM data association and correction steps—measurement, uncertainty, and a descriptor for efficient matching. The data association module later determines whether each new observation corresponds to an existing landmark or a newly discovered feature.

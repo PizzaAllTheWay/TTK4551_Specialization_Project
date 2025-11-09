@@ -43,3 +43,11 @@ weighted by the bias information matrix $\Lambda_{b,ij} = P_{b,ij}^{-1}$.
 \\ \\
 This factor captures the slow, random drift of gyroscope and accelerometer biases over time and ensures stable long-term estimation.  
 
+
+
+\subsubsection{Preintegration Trigger and Factor Connectivity}
+IMU preintegration operates continuously between discrete keyframe events, such as GNSS updates or landmark detections. A new odometry pose is created whenever such an event occurs. During the interval between two events $(t_i, t_j]$, all incoming IMU measurements are accumulated and preintegrated to form a compact relative motion constraint. When the event is triggered, preintegration stops, a new pose node $j$ is created, and a preintegrated IMU factor is added between the previous and current pose nodes $(i,j)$.  
+\\ \\
+All other sensor measurements that arrived within this interval such as GNSS positions, landmark detections, or visual observations are attached to the new pose node as unary factors, each providing an independent residual and noise model. This approach ensures that all sensor data are temporally aligned to the event that created the keyframe while keeping the number of poses in the graph minimal.  
+\\ \\
+The bias state is connected through its own dedicated bias evolution factor, which links the bias variable $B_i$ of the previous keyframe to the new bias variable $B_j$ at the current keyframe. This maintains smooth bias propagation across time and ensures that both the motion (IMU preintegration) and bias drift are jointly optimized. The preintegrated IMU factor depends directly on both pose and bias states, meaning that changes in $B_i$ and $B_j$ influence the predicted motion residual. Together, the IMU preintegration factor, bias evolution factor, and sensor measurement factors form a fully coupled constraint system that updates pose, velocity, and bias consistently at each event driven keyframe.

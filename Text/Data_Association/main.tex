@@ -78,13 +78,22 @@ Problem of Loop Closure
   score each comparison
   if 1 comparison a lot bigger score then the rest OR a set threshold has been reached -> then we have loop closure 
   ALSO have a failsafe trigger, worst case have a periodic trigger that triggers each 50 steps or something to check if loop closure just to be sure if the other thing doesn't trigger lol.
+
+  BUT also we cant check for the newest data because most likely we will math with newest data and we dont want global gating and global DA for that, that should have local gating, so the newest some amount of new data shoudl be ignored should startet maybe at 2D sonar images that are 1-5 Local Map objects back, idk maybe???? but then how do we handle if we know that its local or not. This is a bad idea gain so the previous targets detected tarcking them would be a pain in the ass os some other smarter way idk man its just weird :/
+  THIUS MUST BE ADRESSED!!!
 )
 THEN Integrated DA framework for SLAM
 (
   Each scan:
-    run small gating (local) + JCBB
     check trigger = (similarity checks (FLANN Matcher) + AND Perdioic trigger just in case)
     if loop trigger condition true:
-        run large gating (global) + JCBB on old map regioon to verify if it's actually loop closure or not lol
+      run large gating (global) + JCBB on old map regioon to verify if it's actually loop closure or not lol
+    else:
+      run small gating (local) + JCBB
 )
-then factor construction
+then factor construction 
+(
+  Factor graph equation r = h(x, m) - z jesjes something like that with an R somehow jesjes O-O
+
+  Each time data association identifies a new or previously seen landmark, it triggers a new event in the factor graph. The IMU preintegration is paused, a new odometry pose node is created, and a preintegrated IMU factor is added to link it with the previous pose. If the landmark is new, a new landmark node and corresponding observation factor are added; if it is a reobserved landmark, a new factor connects the current pose to the existing landmark node. Loop closures are handled similarly, creating a new pose node and adding factors that reconnect to previously mapped landmarks, ensuring global consistency in the graph.
+)

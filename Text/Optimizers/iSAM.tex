@@ -395,13 +395,17 @@ R^\top Y = I, \qquad R \Sigma = Y
 $$
 The solve uses only the ``nonzero'' entries of $R$, so computation touches only the parts that matter, not the whole matrix. iSAM walks backwards along those non zero links and gives us exactly the covariance numbers $\sigma_{ij}$ Data Association ask for. If $R$ is mostly banded, this is near linear time. This exact method should only be used when its really needed (eks: a few $\Sigma_{jj}$ blocks to check on a loop closure). It's slower than the conservative shortcut, but still much faster than inverting the whole matrix.
 \\ \\
-\textbf{Alternative way to finding $\Gamma$} 
+\textbf{Alternative way to finding $\Gamma$}
 \\ \noindent
-There's another angle. Instead of being very conservative with $\Gamma$ measurement noise. Uncertainty used in Data Association should reflect the sensor, for example a sonar for scanning the sea floor. With sonar the measurement noise can grow with range, and the transducer resolution can set per axis variances $N(0, \Sigma_{sonar})$. The landmark detection can also contribute its own uncertainty $N(0, \Sigma_{landmark})$. In practice these are combined to form the prediction uncertainty for the residual that is scored. In that case the effective covariance is:
+Instead of relying on an overly conservative fixed measurement noise $\Gamma$ (as done in the original iSAM formulation \cite{iSAM_paper}), it can be derived directly from the physical sensor model. $\Gamma$ represents the measurement noise covariance, the statistical uncertainty of the sensor reading itself, independent of any landmark or map uncertainty.  
+\\ \\
+For sonar based mapping, this measurement noise can be obtained directly from the range dependent model defined in Equation \eqref{eq:range-bearing-model-extended-noise}. Here
 $$
-    \Gamma = Var(h(x, l)) = \Sigma_{sonar} + \Sigma_{landmark}
+    \Gamma_i = \Sigma_{\text{sonar}}^i = \mathbf{R}_{\text{sonar}}(r_i)
 $$
-This can be more informative than a one size fits all setting. However, this approach requires care. If the noise terms are too confident, the data association gate becomes too tight, matches become brittle, and the system can become unstable. Nevertheless, it often yields more accurate maps and a better estimate of the robot's track.
+where the uncertainty increases quadratically with range due to beam spreading, attenuation, and multipath effects. This model already captures the per axis range and bearing variances $\sigma_r^2(1+\alpha_r r_i^2)$ and $\sigma_\theta^2(1+\alpha_\theta r_i^2)$, providing a realistic, range aware characterization of sonar noise around the corrected measurement prediction $h_{\text{corr}}(\mathbf{x}, m^i)$ (see Equation \ref{eq:range-bearing-model-extended}).   
+\\ \\
+Using a physically grounded $\Gamma_i$ instead of a constant conservative value improves realism and stability in both optimization and data association. However, great care must be taken not to make $\Gamma_i$ too small (overconfident), which would make the Mahalanobis gate overly strict and reject valid matches, making the optimizer unstable and crumbling the map, ie divergence form true map and trajectory. In practice, the model should be tuned from representative sonar datasets and can be adaptively scaled with signal to noise ratio, reflection strength, or detection confidence to maintain a good balance between robustness and accuracy.
 
 
 

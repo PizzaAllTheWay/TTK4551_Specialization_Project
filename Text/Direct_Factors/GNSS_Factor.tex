@@ -1,7 +1,7 @@
 \subsection{GNSS Factor}
-The GNSS factor represents a direct measurement constraint that links the estimated vehicle pose to the absolute position and heading obtained from the dual-antenna GNSS receiver. Unlike odometry or landmark based factors, which require preintegration or feature association, the GNSS factor can be constructed directly from the raw measurements with minimal preprocessing, classifying it as a \textit{direct factor}.  
+The GNSS factor represents a direct measurement constraint that links the estimated vehicle pose to the absolute position and heading obtained from the dual-antenna GNSS receiver. Unlike odometry or landmark based factors, which require preintegration or feature association, the GNSS factor can be constructed directly from the raw measurements with minimal preprocessing, classifying it as a \textit{direct factor}.
 \\ \\
-Following the formulation presented in paper on GNSS measurements in Factor Graphs \cite{GNSS_Factor}, the GNSS factor is expressed as a probabilistic constraint between the estimated navigation state and the measured quantities in the NED frame:
+Following the formulation of unary factors in GTSAM tutorial on Factor Graphs \cite{GNSS_Factor}, the GNSS factor can be expressed as a probabilistic constraint between the estimated navigation state and the measured quantities in the NED frame:
 $$
     \mathbf{r}_{GNSS} = \mathbf{z}_{GNSS} - h(\mathbf{x})
 $$
