@@ -1,6 +1,9 @@
 \subsection{Introduction}
+\todo[inline]{WILLL HAVE TO REWRITE THIS BECAUSE PROBABAILITY BULSHIT!}
 This chapter describes the generation of local side scan sonar maps that serve as input to the data association stage in the SLAM frontend. The goal is to transform raw 1D sonar swaths into spatially consistent 2D intensity maps using geometric corrections and coordinate transformations based on the vehicles estimated state. The resulting map represents a localized section of the seafloor expressed in Cartesian coordinates.  
 \\ \\
 The mapping pipeline consists of three main steps, swath processing, cartesian projection, and feature extraction. Swath processing corrects raw sonar data for vehicle motion, beam geometry, and acoustic effects. The corrected data are then projected into a uniform Cartesian grid aligned with the estimated navigation frame, producing a local intensity map. Finally, relevant features are extracted from this map and passed to the data association module for use in SLAM.  
 \\ \\
 Local maps are generated incrementally with partial overlap, where one third of the previous map is retained and combined with two thirds of new sonar data. This ensures temporal and spatial continuity between frames, preventing landmark loss and improving feature consistency across consecutive updates.  
+\\ \\
+Most of the mapping and feature extraction methodology presented in this chapter follows the foundational principles and algorithms established in previous work by Haralstad \cite{side_scan_sonar_master_thesis} and Hoff \cite{side_scan_sonar_paper}. The core processing steps, swath correction, Cartesian projection, and local map generation, are implemented based on their formulations, with several practical adaptations and extensions added in this work. These include a simplified descriptor generation stage, refined landmark extraction criteria, and an optimized data flow for integration with the SLAM front-end.

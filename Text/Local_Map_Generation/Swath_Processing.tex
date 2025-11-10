@@ -142,7 +142,13 @@ The slant range correction relies on the assumption of a locally flat seafloor. 
 \subsubsection{Intensity Normalization}
 The received sonar intensity naturally decays with range due to spherical spreading, absorption, and other propagation losses. These effects introduce unwanted attenuation in the measured signal, causing distant regions of the seabed to appear artificially darker. To counteract this, intensity normalization is applied to compensate for range dependent loss and ensure that the resulting image reflects true seabed backscatter rather than acoustic propagation effects.
 \\ \\
-Before normalization, the sonar signal has already undergone several preprocessing steps including pitch and roll correction, blind zone removal, and slant range correction. The resulting data represent the measured acoustic backscatter intensity as a function of range and time for each ping. This measured intensity, denoted as $I(x,y)$, corresponds to the sonar data obtained up to this stage of processing, containing both the true seabed reflectivity and the effects of acoustic attenuation, beam pattern, and geometric spreading.
+Before normalization, the sonar signal has already undergone pitch and roll correction, blind zone removal, and slant range correction. The processed data now represent the measured acoustic backscatter intensity as a function of ground range for each ping. Each intensity sample is denoted as
+$$
+    I(i) = I(r_g(i))
+$$
+where $r_g(i)$ is the horizontal ground range obtained from the geometric projection (see Equation \ref{eq:local-map-generation-ground-range-projection}). Here, $r_g(i)$ defines the physical position of the $i$-th corresponding seafloor point, while $I(r_g(i))$ represents the measured acoustic intensity received from that $i$-th point.  
+\\ \\
+For simplicity, the notation $I(i)$ is used throughout the following sections to refer to the measured backscatter intensity associated with sample $i$, understood as the intensity evaluated at its ground projected location $r_g(i)$. This measured intensity still contains both the true seabed reflectivity and the effects of acoustic attenuation, beam pattern, and geometric spreading.
 \\ \\
 Intensity normalization can be performed either on a complete sonar image or on individual swaths. In this work, the correction is performed on individual swaths to enable real-time operation and maintain modularity in the processing chain. The method follows the framework described in \cite{side_scan_sonar_master_thesis}, where the measured sonar intensity $I(x,y)$ is modeled as a combination of two distinct components:
 $$
