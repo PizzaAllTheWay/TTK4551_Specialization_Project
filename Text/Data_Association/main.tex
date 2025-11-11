@@ -81,15 +81,30 @@ Problem of Loop Closure
 
   BUT also we cant check for the newest data because most likely we will math with newest data and we dont want global gating and global DA for that, that should have local gating, so the newest some amount of new data shoudl be ignored should startet maybe at 2D sonar images that are 1-5 Local Map objects back, idk maybe???? but then how do we handle if we know that its local or not. This is a bad idea gain so the previous targets detected tarcking them would be a pain in the ass os some other smarter way idk man its just weird :/
   THIUS MUST BE ADRESSED!!!
+  SOLUTION:
+  If you want a concrete implementation rule:
+    -Keep a queue of the last N local submaps (e.g., last 5 sonar frames).
+    -Local DA operates only on these.
+    -Loop closure DA (global) is triggered if similarity > threshold with any submap older than N.
+  So when a new measurement comes in:
+    1)Check similarity against all older submaps beyond the local window (using FLANN + descriptor scoring).
+    2)If score > threshold → run global gating + JCBB on that region.
+    3)Otherwise → perform local gating + JCBB on recent submaps only.
+
+  ALso landmark Revalidation: When an old landmark is successfully reobserved and confirmed through JCBB, it is reclassified as a new landmark, effectively resetting its age in the map.
 )
 THEN Integrated DA framework for SLAM
 (
   Each scan:
-    check trigger = (similarity checks (FLANN Matcher) + AND Perdioic trigger just in case)
+    check trigger = (similarity checks (FLANN Matcher) + AND Perdioic trigger just in case + only look at features older than N lifespan to ensure we are not looking at a new feature)
     if loop trigger condition true:
       run large gating (global) + JCBB on old map regioon to verify if it's actually loop closure or not lol
     else:
       run small gating (local) + JCBB
+
+    landmark Revalidation: When an old landmark is successfully reobserved and confirmed through JCBB, it is reclassified as a new landmark, effectively resetting its age in the map, so now its in the N lifespan as a young again, so next time we check mathing, it will not check for thsi landmark until it has aged.
+
+    Age young landmarks that are still young. The landmarks that are already older than N dont need aging, just ignore them
 )
 then factor construction 
 (

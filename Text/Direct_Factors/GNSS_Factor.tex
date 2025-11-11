@@ -9,17 +9,7 @@ where $\mathbf{z}_{GNSS}$ is the measurement vector containing the absolute posi
 $$
     \mathbf{r}_{GNSS} \sim \mathcal{N}(0, \mathbf{R}_{GNSS})
 $$
-with covariance
-$$
-    \mathbf{R}_{GNSS} =
-    \begin{bmatrix}
-        \sigma_x^2 & 0 & 0 & 0 \\
-        0 & \sigma_y^2 & 0 & 0 \\
-        0 & 0 & \sigma_z^2 & 0 \\
-        0 & 0 & 0 & \sigma_\psi^2
-    \end{bmatrix}
-$$
-The first three terms correspond to the positional uncertainty in the NED frame, while $\sigma_\psi^2$ represents the variance of the yaw measurement obtained from the GNSS dual antenna baseline.
+The corresponding measurement noise is modeled as a zero mean Gaussian with covariance $\mathbf{R}_{\text{GNSS}}$, as defined in Equation \ref{eq:aiding-measurement-model-noise}. This covariance represents the uncertainty associated with the GNSS aiding measurements, where the first three terms correspond to positional uncertainty in the NED frame, and the fourth term describes the yaw variance derived from the dual antenna baseline configuration.  
 \\ \\
 In the factor graph framework, the GNSS observation is implemented as a unary factor connected to the current pose node, contributing a residual term of the form
 $$

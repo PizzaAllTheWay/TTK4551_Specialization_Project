@@ -1,12 +1,12 @@
 \subsection{Probabilistic Mapping}
 \subsubsection{Mapping}
-After swath processing, the sonar data is geometrically corrected, radiometrically normalized, and expressed in ground coordinates. The next step is to reconstruct a local seafloor map that spatially represents the acoustic backscatter intensity in a consistent coordinate frame. This process, referred to as \textit{``probabilistic mapping''}, forms the foundation for subsequent feature extraction and SLAM data association.  
+After swath processing, the sonar data is geometrically corrected, radiometrically normalized, and expressed in ground coordinates. The next stage is to reconstruct a consistent local map that spatially represents the acoustic backscatter intensity over the seafloor. This process, referred to as \textit{``probabilistic mapping''}, forms the core link between raw sonar measurements and the spatial representations required for SLAM based navigation and data association.
 \\ \\
-Traditional Cartesian mapping methods assign a single intensity value to each grid cell based on nearby sonar samples, often using distance based interpolation such as k-Nearest Neighbor (kNN). While fast and efficient, this assumes that each sonar measurement originates from a precise point on the seafloor, ignoring beam width, acoustic footprint, and uncertainty in the range angle domain. As a result, the generated map can appear sharp but physically inaccurate and unstable under noisy or sparse sampling conditions.  
+In conventional Cartesian mapping, each sonar return is assigned directly to a single grid cell using interpolation techniques such as k-Nearest Neighbor (kNN). While computationally efficient, this approach assumes that each sonar measurement corresponds to an exact reflection point on the seafloor, ignoring the finite width of the acoustic beam, the elliptical footprint, and range dependent uncertainty. As a result, such maps tend to appear artificially sharp yet physically inaccurate, particularly under conditions of noise, sparse coverage, or large angular incidence.
 \\ \\
-In contrast, the probabilistic mapping approach distributes the contribution of each sonar return across neighboring grid cells according to a spatial likelihood function that models the sonar beam geometry and measurement uncertainty. Each beam is treated as a probabilistic field rather than a deterministic ray, capturing the spread of possible reflection locations. This results in a continuous, uncertainty aware reflectivity map that better represents the true physical response of the seafloor.  
+The probabilistic mapping framework addresses these limitations by representing each sonar beam as a spatial likelihood field rather than a deterministic ray. Instead of assigning a measurement to a single grid cell, its contribution is distributed among neighboring cells according to a physically motivated probability function derived from beam geometry, angular uncertainty, and measurement noise. This produces a continuous, uncertainty aware reflectivity map that better reflects the true acoustic interaction between the sonar and the seafloor surface.
 \\ \\
-The goal is not only to visualize the seabed but to construct a stable and repeatable spatial representation suitable for landmark detection. The probabilistic formulation improves the consistency of features across consecutive maps and reduces sensitivity to noise, making it a more robust foundation for SLAM compared to purely interpolated Cartesian intensity grids.
+Conceptually, the goal of the mapping stage is to transform sonar measurements into a locally consistent intensity field that preserves both geometric fidelity and radiometric realism. The resulting probabilistic map provides a robust foundation for feature extraction and SLAM, improving landmark repeatability across consecutive local maps and maintaining physical consistency even under dynamic vehicle motion and varying seabed conditions.
 
 
 
@@ -318,7 +318,7 @@ This step compensates for varying observation density across the map, ensuring c
 \paragraph{Post processing and Gap Filling} \mbox{}\\[0.5em] \noindent 
 After map fusion, small unobserved gaps may remain between neighboring swaths. These are filled using a kNN extrapolation, where each empty cell is assigned the mean intensity of its $k$ nearest observed neighbors within a defined distance threshold. To optimize computation, a flood fill method is used to identify only those cells within the active sonar footprint $Q_m$, avoiding unnecessary evaluation of the full grid.
 
-\paragraph{Conlcusion} \mbox{}\\[0.5em] \noindent 
+\paragraph{Algorithm Evaluation} \mbox{}\\[0.5em] \noindent
 The probabilistic interpolation and grid reconstruction algorithm provides a physically accurate and uncertainty aware mapping framework, effectively modeling the sonar beams angular spread and measurement noise. However, the complete formulation is computationally heavy, requiring the evaluation of thousands of potential grid cells per ping and multiple Gaussian weighting operations.  
 \\ \\
 As a result, the full probabilistic approach is unsuitable for real-time use. Therefore, in the next chapter, the optimized multi stage pruning and caching algorithm from \cite{side_scan_sonar_master_thesis} and \cite{side_scan_sonar_paper} is introduced. This improved implementation maintains the same probabilistic consistency while drastically reducing the computational load, enabling real-time operation on microAmpere ASV without sacrificing map quality.
@@ -338,21 +338,21 @@ A direct implementation of the probabilistic map generation would require compar
 The pruning process is organized into 3 hierarchical stages, each discarding unnecessary grid cells based on progressively more selective criteria.
 
 \paragraph{Stage 1: Range Based Pruning} \mbox{}\\[0.5em] \noindent
-The first and cheapest filtering step limits grid cells based on their slant range relative to the sonar position $\mathbf{p}_{s/O}^{n}(m)$. Since the sonar pose and the range bounds $r_{\min}$ and $r_{\max}$ are constant for each ping $m$, they are computed once and reused. All cells are evaluated using the Euclidean distance
+The first and cheapest filtering step limits grid cells based on their slant range relative to the sonar position $\mathbf{p}_{s/O}^{n}(m)$. Since the sonar pose and the range bounds $r_{\min}$ and $r_{\max}$ are constant for each ping $m$, they are computed once and reused (See Equation \ref{eq:local-map-generation-ground-range-projection} and Figure \ref{fig:local-map-generation-azimuth-geometry}). All cells are evaluated using the Euclidean distance
 $$
     r_q = \| \mathbf{p}_q - \mathbf{p}_{s/O}^{n}(m) \|
 $$
 and only those satisfying $r_{\min} < r_q < r_{\max}$ are kept. This operation quickly eliminates most of the map outside the sonar footprint, typically reducing the grid size by over an order of magnitude.
 
 \paragraph{Stage 2: Angular Pruning} \mbox{}\\[0.5em] \noindent
-The remaining grid cells are then pruned by angular visibility using the observation angle $\theta_{obs}(q)$ (see Equation \ref{eq:local-map-generation-observation-angle}). The precomputed distances $r_q$ from the previous stage are reused to calculate $\theta_{obs}(q)$ efficiently. Cells outside the effective horizontal beam aperture are removed:
+The remaining grid cells are then pruned by angular visibility using the observation angle $\theta_{obs}(q)$ (see Equation \ref{eq:local-map-generation-observation-angle} and Figure \ref{fig:local-map-generation-azimuth-geometry}). The precomputed constants from the previous stage are reused to help calculate $\theta_{obs}(q)$ efficiently. Cells outside the effective horizontal beam aperture are removed:
 $$
     |\theta_{obs}(q)| < \frac{\alpha_h}{2}
 $$
 This second stage eliminates cells lying outside the sonars field of view, further shrinking the active grid subset.
 
 \paragraph{Stage 3: Probability Based Pruning} \mbox{}\\[0.5em] \noindent
-For the remaining candidates, the illumination probability $P_m(q)$ is evaluated using the beam model in Equation \ref{eq:local-map-generation-probability-weight-individual-swaths}. Cells with negligible contribution are discarded using a small predefined threshold $\epsilon$, yielding the final refined set:
+For the remaining candidates, the illumination probability $P_m(q)$ is evaluated using the beam model in Equation \ref{eq:local-map-generation-probability-weight-individual-swaths}. The precomputed observation angle $\theta_{obs}(q)$ from the previous stage are reused to help calculate $P_m(q)$ efficiently. Cells with negligible contribution are discarded using a small predefined threshold $\epsilon$, yielding the final refined set:
 $$
     Q_m = \left\{
         q \in Q \; \bigg| \;
@@ -499,24 +499,5 @@ The sliding window mechanism ensures that the local probabilistic map always ref
     \caption{Sliding window mechanism for local map updates. Each frame represents a local probabilistic map composed of $N$ swaths. As new data arrives, the window advances while retaining one third of the previous samples for overlap, ensuring continuity and real-time operation through a ring buffer structure.}
     \label{fig:local-map-generation-sliding-map-window}
 \end{figure}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 

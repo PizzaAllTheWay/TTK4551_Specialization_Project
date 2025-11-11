@@ -232,6 +232,36 @@ Here, $\mathbf{p}_{b/O}^{n}$ and $\mathbf{v}_{b/O}^{n}$ represent the vehicles p
 \\ \\
 This nominal model represents the idealized, noise free motion of the vehicle as inferred from IMU measurements. It captures the deterministic propagation of position, velocity, attitude, and bias under perfect sensor conditions, serving as the baseline dynamic model for integrated navigation systems.  
 \\ \\
+In the real world, this motion model is never perfectly deterministic. Even though Equation \ref{eq:kinematics-motion-model} describes an ideal system, the actual process is continuously disturbed by sensor noise and model imperfections. Since this model is derived directly from the INS model, it effectively represents the IMU itself, and the IMU is a sensor with stochastic noise and bias drift. To account for these imperfections, a process noise term is introduced, characterized by the covariance matrix $\mathbf{Q}$.  
+\\ \\
+The true system evolution can therefore be represented as the nominal model driven by process noise
+$$
+    \dot{\mathbf{x}}_{\text{real}} = f(\mathbf{x}, \mathbf{u}) + \mathbf{G}\,\mathbf{n}_{\text{INS}},
+    \qquad
+    \mathbf{n}_{\text{INS}} \sim \mathcal{N}(\mathbf{0},\, \mathbf{Q})
+$$
+where $\mathbf{G}$ is the noise input matrix that maps the 12 dimensional process noise into the full 16 dimensional state space, and $\mathbf{Q}$ defines the covariance of the IMU noise sources. This formulation captures how the real system deviates from the ideal deterministic model due to stochastic disturbances originating from the inertial sensors.
+\\ \\
+The process noise covariance $\mathbf{Q}$ models how random accelerometer and gyroscope disturbances drive uncertainty into the system states over time. In this work, $\mathbf{Q}$ is assumed Gaussian, which makes the mathematics tractable and aligns well with the typical near Gaussian behavior of MEMS IMUs. The covariance is constructed from the standard deviations of the IMU noise parameters as  
+\begin{equation}
+    \mathbf{Q} =
+    \mathrm{diag}(
+        \sigma_a^2\mathbf{I}_3,\;
+        \sigma_\omega^2\mathbf{I}_3,\;
+        \sigma_{b_a}^2\mathbf{I}_3,\;
+        \sigma_{b_\omega}^2\mathbf{I}_3
+    )
+    \label{eq:process-noise-covariance}
+\end{equation}
+where  
+$\sigma_a$ and $\sigma_\omega$ are the accelerometer and gyroscope white noise densities, and $\sigma_{b_a}$ and $\sigma_{b_\omega}$ describe the random walk components of the accelerometer and gyroscope bias drift. Each parameter is 3D (x, y, z). These values are typically taken from the IMU datasheet or estimated empirically from static measurements using Allan variance analysis.  
+\\ \\
+It is important to note that while the full INS state $\mathbf{x}$ has 16 elements (position, velocity, attitude quaternion, and two bias vectors), $\mathbf{Q}$ only has 12 dimensions. This is because $\mathbf{Q}$ represents the \textit{``driving noise sources''}, accelerometer and gyro noise plus their bias drifts, rather than direct noise on the state itself. The position, velocity, and attitude uncertainties arise indirectly as this noise propagates through the system dynamics over time.  
+\\ \\
+How this propagation is carried out mathematically is handled through system linearization, transformation, and discretization of the process noise. These operations map the continuous time noise characteristics into discrete time uncertainty that spreads through all 16 states of the filter. The detailed formulation of this process, including the transformation matrices and covariance propagation equations, will be presented later in the \textit{``State Estimation''} chapter.  
+\\ \\
+For now, it is sufficient to understand that $\mathbf{Q}$ defines the statistical properties of the IMU noise processes that drive the uncertainty growth in the system. This provides the essential stochastic foundation for the subsequent estimation framework, where these disturbances are explicitly propagated and corrected using aiding measurements such as GNSS.
+\\ \\
 By separating deterministic kinematics from stochastic sensor effects, the INS formulation provides a structured foundation for real-time state estimation. This nominal model is particularly suited for use within an Error State Kalman Filter (ESKF), where it defines the expected system evolution between measurement updates and enables correction using external aiding sources such as GNSS or magnetometers.  
 \\ \\
 Overall, the INS based motion model offers a compact and computationally efficient representation of the ASVs dynamics. While it omits detailed hydrodynamic effects, its balance of simplicity, generality, and compatibility with sensor fusion frameworks makes it a robust and practical choice for autonomous surface vehicle navigation and SLAM applications.
@@ -292,9 +322,30 @@ to the observed quantities as
 \end{equation}
 In this formulation, the first component represents the transformed GNSS position measurement expressed in the navigation frame, while the second component computes the expected yaw angle $\psi$ directly from the attitude quaternion $\mathbf{q}$. This quaternion based expression provides the same horizontal heading angle as that obtained geometrically from the dual antenna baseline, ensuring a consistent definition of yaw across both the INS and aiding measurement models. The term $\mathbf{n}_{\text{GNSS}}$ denotes zero mean Gaussian noise combining both position and heading uncertainties, with covariance $\mathbf{R}_{\text{GNSS}} = \text{diag}(\mathbf{R}_{p}, \sigma_\psi^2)$.
 \\ \\
-For small autonomous surface vessels such as the MicroAmpere, the platform demonstrates inherently stable roll and pitch dynamics due to its catamaran style pontoon design. This hydrodynamic stability allows the assumption that roll and pitch angles remain close to zero during nominal operation, effectively reducing the attitude representation to a single dominant rotation about the vertical axis, corresponding to the yaw angle. With this simplification, the GNSS aiding measurements primarily correct horizontal position and heading, while small vertical displacements and tilting motions are neglected, as they have minimal impact on overall navigation accuracy.  
+For small autonomous surface vessels such as the MicroAmpere, the platform demonstrates inherently stable roll and pitch dynamics due to its catamaran style pontoon design. This hydrodynamic stability allows the assumption that roll and pitch angles remain close to zero during nominal operation, effectively reducing the attitude representation to a single dominant rotation about the vertical axis, corresponding to the yaw angle. With this simplification, the GNSS aiding measurements primarily correct horizontal position and heading, while small vertical displacements and tilting motions are neglected, as they have minimal impact on overall navigation accuracy.
 \\ \\
-The dual antenna GNSS configuration therefore provides a compact and robust aiding source that supplies both absolute position and heading information in the navigation frame. By constraining the inertial navigation solution with globally referenced measurements, it compensates for the natural drift of the INS and ensures long-term stability, accuracy, and global consistency in the estimated vehicle pose. This makes the aiding model particularly suitable for marine environments where attitude variations are small and precise horizontal localization is of primary importance.
+The statistical characteristics of the aiding measurements are described by the covariance matrix $\mathbf{R}_{\text{GNSS}}$, which defines the uncertainty associated with both position and yaw observations. The GNSS measurement noise is modeled as a zero mean Gaussian process, as this assumption simplifies the mathematical formulation of the estimation problem and allows the use of linear statistical tools such as the Kalman filter. Furthermore, most sensor noise processes exhibit approximately Gaussian behavior, and therefore all models in this work adopt Gaussian noise representations for analytical tractability and consistency.
+$$
+    \mathbf{n}_{\text{GNSS}} \sim \mathcal{N}(\mathbf{0},\,\mathbf{R}_{\text{GNSS}})
+$$
+with covariance
+\begin{equation}
+    \mathbf{R}_{\text{GNSS}} =
+    \begin{bmatrix}
+        \sigma_x^2 & 0 & 0 & 0 \\
+        0 & \sigma_y^2 & 0 & 0 \\
+        0 & 0 & \sigma_z^2 & 0 \\
+        0 & 0 & 0 & \sigma_\psi^2
+    \end{bmatrix}
+    \label{eq:aiding-measurement-model-noise}
+\end{equation}
+where the diagonal entries represent the individual variances of the GNSS position and heading measurements. The horizontal position variances $\sigma_x^2$ and $\sigma_y^2$, together with the vertical variance $\sigma_z^2$, can either be taken from the GNSS receiver specifications or estimated empirically by collecting a sequence of static position samples and computing the sample covariance.  
+\\ \\
+While all GNSS measurement variances are influenced by external factors such as satellite visibility, signal quality, and atmospheric conditions, the yaw variance $\sigma_\psi^2$ introduces additional complexity due to its dependence on the geometric configuration of the dual antenna baseline. Unlike position variances, which can be directly related to the GNSS positional dilution of precision and signal quality, the yaw covariance is a nonlinear function of baseline length, relative orientation, and phase measurement accuracy between the two antennas. Analytical methods exist for modeling this relationship using differential carrier phase error propagation and baseline geometry. However, for practical implementation in this work, $\sigma_\psi^2$ is determined empirically by recording heading data under static or low dynamic conditions and computing the sample variance. This provides a realistic and representative characterization of the true heading uncertainty while inherently capturing the combined effects of baseline geometry and signal conditions.
+\\ \\
+In practice, the resulting covariance matrix $\mathbf{R}_{\text{GNSS}}$ provides a quantitative description of the expected accuracy of the aiding measurements and directly influences the filter update weighting. Accurate estimation of $\mathbf{R}_{\text{GNSS}}$ is therefore critical to achieve consistent sensor fusion performance and to maintain the correct balance between inertial propagation and GNSS correction.
+\\ \\
+In summary, the dual antenna GNSS system provides a reliable and mathematically well defined aiding source that delivers both absolute position and heading information in the navigation frame. By constraining the inertial navigation solution with globally referenced measurements, it effectively limits drift accumulation and ensures consistent long term state estimation. This makes the aiding model well suited for marine applications where stable attitude and accurate horizontal localization are of primary importance.
 
 
 
@@ -330,48 +381,48 @@ The measurement model relates the observed landmark measurement $\mathbf{z}^i$ t
         z_r^i \\
         z_\theta^i
     \end{bmatrix} = 
-    \mathbf{z}^i = h_{\text{corr}}(\mathbf{x}, m^i) + \boldsymbol{\nu}^i
+    \mathbf{z}^i = h_{\text{corr}}(\mathbf{x}, m^i) + \mathbf{n}^i
     \label{eq:range-bearing-measurement-model}
 \end{equation}
-where $\mathbf{z}^i = [z_r^i, z_\theta^i]^\top$ denotes the measured range and bearing of the $i$-th landmark, and $\boldsymbol{\nu}^i$ represents the stochastic measurement noise.  
+where $\mathbf{z}^i = [z_r^i, z_\theta^i]^\top$ denotes the measured range and bearing of the $i$-th landmark, and $\mathbf{n}^i$ represents the stochastic measurement noise.  
 \\ \\
 The predicted or expected landmark observation is described by the corrected deterministic measurement model
 \begin{equation}
-    h_{\text{corr}}(\mathbf{x}, m^i) = h(\mathbf{x}, m^i) + \Delta h(\mathbf{x}, m^i, \phi_i)
+    h_{\text{corr}}(\mathbf{x}, m^i) = h(\mathbf{x}, m^i) + \Delta h(\mathbf{x}, m^i, \theta^i)
     \label{eq:range-bearing-model-extended}
 \end{equation}
-where $h(\mathbf{x}, m^i)$ is the nominal geometric prediction of range and bearing based solely on the vehicle pose and landmark position as defined in Equation \eqref{eq:range-bearing-model-deterministic}. The term $\Delta h(\mathbf{x}, m^i, \phi_i)$ introduces a deterministic correction that compensates for angle dependent reflection and refraction effects, while $\phi_i$ denotes the local incidence angle between the sonar beam and the line of sight to the landmark. The remaining term $\boldsymbol{\nu}^i$ models zero mean Gaussian noise with range dependent covariance $\mathbf{R}_z(r_i)$, representing the random uncertainty in the measurement. Together, these components define how the actual landmark observation $\mathbf{z}^i$ deviates from the ideal geometric prediction due to both deterministic environmental effects and stochastic sensor noise.
+where $h(\mathbf{x}, m^i)$ is the nominal geometric prediction of range and bearing based solely on the vehicle pose and landmark position as defined in Equation \eqref{eq:range-bearing-model-deterministic}. The term $\Delta h(\mathbf{x}, m^i, \theta^i)$ introduces a deterministic correction that compensates for angle dependent reflection and refraction effects, while $\theta^i$ denotes the local incidence angle between the sonar beam and the line of sight to the landmark, ie bearing. The remaining term $\mathbf{n}^i$ models zero mean Gaussian noise with range dependent covariance $\mathbf{R}_{z^i}$, representing the random uncertainty in the measurement. Together, these components define how the actual landmark observation $\mathbf{z}^i$ deviates from the ideal geometric prediction due to both deterministic environmental effects and stochastic sensor noise.
 \\ \\
-The local incidence angle $\phi_i$ is defined as the angle between the sonar beam direction and the line of sight to the landmark in the body frame:
+The bearing $\theta^i$ is local incidence angle defined as the angle between the sonar beam direction and the line of sight to the landmark in the body frame:
 $$
-    \phi_i = \mathrm{atan2}(m_b^i{}_y,\, m_b^i{}_x),
+    \theta^i = \mathrm{atan2}(m_b^i{}_y,\, m_b^i{}_x),
     \qquad
     m_b^i = R_n^b(\mathbf{q}) \left( m^i - \mathbf{p}_{b/O}^{n} \right)
 $$
 where $R_n^b(\mathbf{q})$ transforms the landmark position from the navigation to the body frame. This angle changes with the ASV yaw and influences both reflection strength and measurement bias.  
 \\ \\
-The correction term $\Delta h(\mathbf{x}, m^i, \phi_i)$ models this deterministic bias and is approximated as
+The correction term $\Delta h(\mathbf{x}, m^i, \theta^i)$ models this deterministic bias and is approximated as
 $$
-    \Delta h(\mathbf{x}, m^i, \phi_i) \approx
+    \Delta h(\mathbf{x}, m^i, \theta^i) \approx
     \begin{bmatrix}
-        \kappa_r (1 - \cos{\phi_i}) \\
-        \kappa_\theta \sin{\phi_i}
+        \kappa_r (1 - \cos{\theta^i}) \\
+        \kappa_\theta \sin{\theta^i}
     \end{bmatrix}
 $$
 where $\kappa_r$ and $\kappa_\theta$ are empirically tuned parameters that describe how range and bearing measurements vary with incidence angle. The range component reduces for grazing angles due to weaker echoes, while the bearing term introduces a small angular offset caused by asymmetric scattering.  
 \\ \\
 The random noise component is modeled as
 \begin{equation}
-    \boldsymbol{\nu}^i \sim \mathcal{N}(\mathbf{0}, \mathbf{R}_{sonar}(r_i)),
+    \mathbf{n}^i \sim \mathcal{N}(\mathbf{0}, \mathbf{R}_{z^i}),
     \qquad
-    \mathbf{R}_{sonar}(r_i) =
+    \mathbf{R}_{z^i} =
     \begin{bmatrix}
-        \sigma_r^2(1 + \alpha_r r_i^2) & 0 \\
-        0 & \sigma_\theta^2(1 + \alpha_\theta r_i^2)
+        \sigma_r^2(1 + \alpha_r (r^i)^2) & 0 \\
+        0 & \sigma_\theta^2(1 + \alpha_\theta (r^i)^2)
     \end{bmatrix}
     \label{eq:range-bearing-model-extended-noise}
 \end{equation}
-where $r_i = \sqrt{(m_b^i{}_x)^2 + (m_b^i{}_y)^2}$ is the predicted landmark range. The parameters $\sigma_r$ and $\sigma_\theta$ represent the nominal measurement noise at short distance, while $\alpha_r$ and $\alpha_\theta$ model the range dependent growth in uncertainty due to acoustic attenuation, multipath effects, and beam spreading.  
+where $r^i = \sqrt{(m_b^i{}_x)^2 + (m_b^i{}_y)^2}$ is the predicted landmark range. The parameters $\sigma_r$ and $\sigma_\theta$ represent the nominal measurement noise at short distance, while $\alpha_r$ and $\alpha_\theta$ model the range dependent growth in uncertainty due to acoustic attenuation, multipath effects, and beam spreading.  
 
 
 

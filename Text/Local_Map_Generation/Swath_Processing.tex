@@ -1,16 +1,18 @@
 \subsection{Swath Processing}
 \subsubsection{Raw Data and Waterfall Image Formation}
-Each side scan sonar ping produces a 1D signal of backscatter intensity as a function of slant range, representing the acoustic energy reflected from the seafloor along the sonar beam path. As the vessel moves forward, consecutive pings are recorded sequentially and stacked along the track direction to form a 2D intensity image known as a \textit{``waterfall image''} or raw swath. In this representation, one axis corresponds to the ping index or along track distance, while the other corresponds to the across track slant range. The pixel intensity reflects the relative strength of the backscattered acoustic signal from the seafloor.
+Side scan sonar data acquisition begins with the transmission of acoustic pulses and the recording of their backscattered echoes along each sonar beam. Each transmitted ping produces a 1D return signal that represents the intensity of acoustic reflections as a function of slant range. This signal corresponds to the strength of the backscattered energy received from the seafloor at varying distances from the transducer.  
 \\ \\
-The waterfall image visualizes the seabed reflectivity pattern across successive pings but remains in slant range space, meaning that the vertical dimension represents the acoustic propagation distance rather than true horizontal ground distance. This introduces geometric distortion, particularly near the nadir, where the sonar beam intersects the seafloor at steep angles. As a result, the apparent scale of features varies with range, and the image does not yet represent the true seabed geometry.
+As the vessel advances, consecutive pings are recorded sequentially and combined to form a 2Dl intensity representation known as a \textit{``waterfall image''} or raw swath. In this format, the horizontal axis corresponds to the ping index or along track distance, while the vertical axis represents the across track slant range. The pixel intensity encodes the relative strength of the seabed backscatter, providing an initial qualitative visualization of seafloor texture and reflectivity.  
+\\ \\
+This raw waterfall image forms the foundational representation of side scan sonar data. However, it remains expressed in slant range space rather than true horizontal ground coordinates, introducing geometric distortions, particularly near the nadir region where the sonar beam intersects the seafloor at steep angles. Consequently, the apparent scale and spatial arrangement of features vary with range, and the image cannot yet be interpreted as a direct top down map of the seafloor.  
+\\ \\
+The subsequent stages of swath processing correct for these geometric and radiometric effects to recover an accurate, physically consistent representation of seabed reflectivity. These stages include attitude compensation for pitch and roll, blind zone removal, slant range correction, and intensity normalization. Together, they transform the raw sonar measurements into a geometrically corrected and radiometrically balanced swath suitable for Cartesian projection and feature extraction in later mapping and SLAM stages.
 \begin{figure}[H]
     \centering
     \includegraphics[width=1.0\linewidth]{Pictures/Local_Map_Generation/Swath_Processing/raw_waterfall_image.png}
     \caption{Example of a raw side scan sonar waterfall image showing backscatter intensity versus slant range for consecutive pings. The dark central band corresponds to the sonar blind zone.\textsuperscript{\cite{raw_waterfall_image}}}
     \label{fig:local-map-generation-raw-waterfall-image}
 \end{figure}
-\noindent
-This raw slant range representation forms the foundation for subsequent swath processing. The following stages apply geometric and radiometric corrections to compensate for sensor motion, vehicle attitude, and acoustic signal decay, producing a consistent intensity map suitable for Cartesian projection and feature extraction. The implemented processing steps are based on the methodologies described in \cite{side_scan_sonar_master_thesis} and \cite{side_scan_sonar_paper}.
 
 
 

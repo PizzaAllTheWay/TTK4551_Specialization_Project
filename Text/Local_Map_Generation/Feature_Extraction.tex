@@ -1,21 +1,18 @@
 \subsection{Feature Extraction}
 \subsubsection{Landmarks}
-Once the local map $M$ has been generated, the next step is to identify distinct and stable seafloor features that can serve as landmarks for SLAM. These landmarks correspond to repeatable acoustic structures, typically bright echoes or dark shadow regions that remain consistent across consecutive local maps and provide reliable reference points for localization and data association.  
+Once the local reflectivity map $M$ has been generated, the next step is to identify distinct and stable seafloor features that can serve as landmarks for SLAM. These landmarks correspond to repeatable acoustic structures, such as bright echo highlights or dark shadow regions that persist across consecutive local maps and provide reliable reference points for localization and data association.  
 \\ \\
-The detection process operates directly on the local reflectivity map $M$ without requiring any global reference.  
-The map is first filtered using a edge preservation filter to reduce speckle noise while preserving strong spatial gradients.
+The feature extraction process operates directly on the normalized reflectivity map $M$, treating it as an intensity field analogous to a grayscale image. The objective is to detect, describe, and represent acoustically distinctive regions in a compact form that can later be matched across time. This involves applying image processing methods such as edge preserving filtering, adaptive thresholding, and connected component analysis to isolate coherent acoustic responses from background texture and noise.  
 \\ \\
-From the resulting field, locally dominant regions are extracted based on intensity contrast and spatial coherence. Compact high intensity areas are identified as \textit{``echo landmarks''}, representing reflective or elevated objects, while elongated low intensity regions correspond to \textit{``shadow landmarks''} created by acoustic occlusion or terrain depressions.  
-\\ \\
-Each detected landmark is characterized by its centroid position $\mathbf{p}_L = [x_L, y_L]^\top$ in the local Cartesian frame and is assigned a compact descriptor summarizing the surrounding texture and reflectivity pattern. These descriptors are later used for efficient nearest neighbor matching across consecutive map updates in the SLAM data association stage.  
-\\ \\
-For integration with the SLAM formulation, every landmark is expressed as a local measurement in range and bearing relative to the vehicle, which is assumed to be positioned at the origin $(0,0)$ of the local map with its heading aligned with the $x$-axis:
+Each detected landmark is defined by its spatial centroid $\mathbf{p}_L = [x_L, y_L]^\top$ in the local Cartesian frame, and characterized through a descriptor summarizing its local reflectivity and texture pattern. To interface with the SLAM framework, every landmark is expressed as a measurement in polar form:
 $$
-    \mathbf{z}^i = [z_r^i, \, z_\theta^i]^\top
+    \mathbf{z}^i = [z_r^i,\, z_\theta^i]^\top
 $$
-This formulation provides a direct and self contained measurement model consistent with the range bearing model $h(\mathbf{x}, \mathbf{m}^i)$ used in SLAM (see Equation \ref{eq:range-bearing-measurement-model}).  
+where $z_r^i$ and $z_\theta^i$ represent the range and bearing of the landmark relative to the vehicle, assumed to be positioned at the origin of the local map with its heading aligned to the $x$ axis. This provides a compact, self contained observation consistent with the range bearing model $h(\mathbf{x}, \mathbf{m}^i)$ used in SLAM. (see Equation \ref{eq:range-bearing-measurement-model})  
 \\ \\
-Each extracted landmark is stored together with its descriptor, centroid position, and confidence score, forming the interface between the local mapping stage and the SLAM data association process, which determines whether a given landmark corresponds to an already known feature or represents a newly observed one.  
+The goal of this stage is not only to detect features but also to define a standardized data interface for the SLAM system. The expected input is the processed reflectivity map $M$, while the outputs are a set of landmark measurements $\mathbf{z}^i$ with associated uncertainty and descriptors.  
+\\ \\
+Subsequent sections describe the detailed image processing pipeline used for landmark detection, the computation of measurement and uncertainty, and the design of compact descriptors that enable reliable feature matching across local maps.
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.9\linewidth]{Pictures/Local_Map_Generation/Feature_Extraction/landmark_measurement_example.png}
@@ -270,11 +267,11 @@ allowing straightforward integration with the sensor model and uncertainty propa
 \subsubsection{Landmark Measurement Uncertainty}
 Every measurement $\mathbf{z}^i$ obtained from Equation \ref{eq:local-map-generation-landmark-measurement} is subject to uncertainty arising from sensor noise, acoustic propagation effects, and image processing errors.  
 \\ \\
-To properly integrate these measurements into the SLAM optimization, each observation is assigned a covariance matrix $\mathbf{R}_{z_i}$ that quantifies the expected error in range and bearing. This matrix defines the confidence associated with the measurement constraint in the graph, weighting its influence during the nonlinear least squares optimization.  
+To properly integrate these measurements into the SLAM optimization, each observation is assigned a covariance matrix $\mathbf{R}_{z^i}$ that quantifies the expected error in range and bearing. This matrix defines the confidence associated with the measurement constraint in the graph, weighting its influence during the nonlinear least squares optimization.  
 \\ \\
 Following the range dependent noise formulation in Equation \ref{eq:range-bearing-model-extended-noise}, the covariance for each landmark measurement $\mathbf{z}^i = [z_r^i,\, z_\theta^i]^\top$ is modeled as:
 \begin{equation}
-    \mathbf{R}_{z_i} =
+    \mathbf{R}_{z^i} =
     \begin{bmatrix}
         \sigma_r^2 \big(1 + \alpha_r\, z_r^{i\,2}\big) & 0 \\[0.4em]
         0 & \sigma_\theta^2 \big(1 + \alpha_\theta\, z_r^{i\,2}\big)
@@ -285,7 +282,7 @@ Here, $\sigma_r$ and $\sigma_\theta$ denote the base noise levels in range and b
 \\ \\
 Intuitively, as the landmark distance $z_r^i$ increases, the signal to noise ratio degrades due to beam spreading, attenuation, and reduced pixel resolution. This leads to larger uncertainty in both range and bearing, which is reflected by the quadratic scaling terms in the covariance. At short ranges, the measurements are more reliable and the uncertainty approaches the base values $\sigma_r^2$ and $\sigma_\theta^2$.  
 \\ \\
-Within the graph based SLAM framework, this covariance directly defines the information matrix $\mathbf{\Omega}_{z_i} = \mathbf{R}_{z_i}^{-1}$ used to weight the measurement residuals during optimization, ensuring that reliable, close landmarks contribute more strongly than distant or uncertain ones.
+Within the graph based SLAM framework, this covariance directly defines the information matrix $\mathbf{\Omega}_{z^i} = \mathbf{R}_{z^i}^{-1}$ used to weight the measurement residuals during optimization, ensuring that reliable, close landmarks contribute more strongly than distant or uncertain ones.
 
 
 
@@ -427,6 +424,6 @@ $$
 $$
 This minimal representation provides all essential information for the SLAM data association and optimization steps comprising the landmark measurement, its uncertainty, and a discriminative descriptor for efficient matching.  
 \\ \\
-Each detected landmark is thus represented compactly by its measurement $\mathbf{z}^i$ (Equation \ref{eq:local-map-generation-landmark-measurement}), its associated uncertainty $\mathbf{R}_{z_i}$ (Equation \ref{eq:local-map-generation-landmark-measurement-uncertainty}), and its appearance geometry descriptor $\mathbf{d}_L^i$ (Equation \ref{eq:local-map-generation-descriptor}).
+Each detected landmark is thus represented compactly by its measurement $\mathbf{z}^i$ (Equation \ref{eq:local-map-generation-landmark-measurement}), its associated uncertainty $\mathbf{R}_{z^i}$ (Equation \ref{eq:local-map-generation-landmark-measurement-uncertainty}), and its appearance geometry descriptor $\mathbf{d}_L^i$ (Equation \ref{eq:local-map-generation-descriptor}).
 \\ \\
 Together, these three components form the minimal yet complete information set required for graph based SLAM, defining what was observed, how reliable that observation is, and how it can be uniquely recognized across consecutive local maps.

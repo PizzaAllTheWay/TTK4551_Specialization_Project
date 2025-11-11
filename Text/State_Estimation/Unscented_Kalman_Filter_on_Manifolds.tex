@@ -327,9 +327,9 @@ $$
 $$
 where:
 \begin{itemize}
-    \item $d = \text{dim}(P)$ is used for the \textbf{state uncertainty} during prediction
+    \item $d = \text{dim}(P)$ is used for the \textbf{state uncertainty} during prediction and for the \textbf{measurement update}
     \item $q = \text{dim}(Q)$ is used for the \textbf{process noise} during prediction
-    \item $u = \text{dim}(P_{up})$ is used for the \textbf{measurement update}
+    \item $u = \text{dim}(P_{up})$ is defined in algorithm but never actually used for state estimation.
 \end{itemize}
 In the UKF-M code, each step uses its own scaling parameter $\alpha_d, \alpha_q, \alpha_u$ respectively:
 $$
@@ -337,7 +337,7 @@ $$
 $$
 allowing independent control over sigma point spread in each stage.
 \\ \\
-For a tangent space of dimension $dim$, the number of sigma points generated is $2\,dim + 1$. For example, for INS model \ref{eq:kinematics-motion-model-states} with 15 dimensions the total number of sigma points generated is $(d=15)$, $31$ sigma points are generated. Meanwhile, for the process noise model, which includes accelerometer and gyroscope measurement noise as well as their biases $(q=12)$, the filter generates $25$ sigma points. Note that in the current UKF-M implementation, the parameter $u$ is defined but never actually used. All sigma point generation in both propagation and update steps relies on the state dimension $d$ and $q$. The reason $u$ exists in the formulation is purely for generality or future extensions, but it remains unused in the standard UKF-M algorithm.
+For a tangent space of dimension $dim$, the number of sigma points generated is $2\,dim + 1$. For example, for INS model \ref{eq:kinematics-motion-model-states} with 16 dimensions the total number of sigma points generated is $(d=16)$, $33$ sigma points are generated. Meanwhile, for the process noise model, which includes accelerometer and gyroscope measurement noise as well as their biases $(q=12)$, the filter generates $25$ sigma points. Note that in the current UKF-M implementation, the parameter $u$ is defined but never actually used. All sigma point generation in both propagation and update steps relies on the state dimension $d$ and $q$. The reason $u$ exists in the formulation is purely for generality or future extensions, but it remains unused in the standard UKF-M algorithm.
 \\ \\
 The final UKF-M formulation for \texttt{set\_weights(dim, $\alpha$)} command is:
 $$

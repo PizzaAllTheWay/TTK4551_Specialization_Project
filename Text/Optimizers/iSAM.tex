@@ -55,13 +55,13 @@ Plug the linearized odometry \eqref{eq:optimizer-iSAM-linearized-odometry} and m
 \\ \\
 For an odometry factor $i$, the linearized residual is
 $$
-r_i^{\text{odo}}=F_i^{\,i-1}\Delta x_{i-1}+G_i^{\,i}\Delta x_i-a_i,
+    r_i^{\text{odo}}=F_i^{\,i-1}\Delta x_{i-1}+G_i^{\,i}\Delta x_i-a_i,
 $$
 where $F$ and $G$ are the odometry Jacobians. Because odometry constrains the relative change between $x_{i-1}$ and $x_i$, the block on $\Delta x_i$ is $-I$ ($G_i^{\,i}=-I$). Here $a_i$ is the current odometry prediction error.
 \\ \\
 For a measurement factor $k$ connecting pose $x_{i_k}$ to landmark $l_{j_k}$, the residual is
 $$
-r_k^{\text{meas}}=H_k^{\,i_k}\Delta x_{i_k}+J_k^{\,j_k}\Delta l_{j_k}-c_k,
+    r_k^{\text{meas}}=H_k^{\,i_k}\Delta x_{i_k}+J_k^{\,j_k}\Delta l_{j_k}-c_k,
 $$
 with $H$ and $J$ the measurement Jacobians with respect to the involved pose and landmark, and $c_k$ the corresponding prediction error.
 \\ \\
