@@ -1,0 +1,16 @@
+\subsection{Factor Construction}
+\begin{itemize}
+    \item Every successful DA event triggers factor graph updates.
+    \item Pause IMU preintegration, create new pose node.
+    \item Add IMU preintegration factor to previous pose.
+    \item If new landmark → create a new landmark node + measurement factor.
+    \item If re-observed landmark → add measurement factor linking to existing landmark.
+    \item Loop closures add additional constraints from current pose to old landmarks.
+    \item Measurement factors follow:
+    \[
+    r = h(x, m) - z
+    \]
+    including measurement noise covariance $R$.
+\end{itemize}
+
+Each time data association identifies a new or previously seen landmark, it triggers a new event in the factor graph. The IMU preintegration is paused, a new odometry pose node is created, and a preintegrated IMU factor is added to link it with the previous pose. If the landmark is new, a new landmark node and corresponding observation factor are added; if it is a reobserved landmark, a new factor connects the current pose to the existing landmark node. Loop closures are handled similarly, creating a new pose node and adding factors that reconnect to previously mapped landmarks, ensuring global consistency in the graph.

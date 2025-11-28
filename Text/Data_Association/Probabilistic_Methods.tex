@@ -1,0 +1,8 @@
+\subsection{Probabilistic Methods}
+\begin{itemize}
+    \item PDA: soft association, assigns probabilities to multiple landmarks; expensive and unreliable for dense measurements. Could work, but need good model, questionable validity.
+    \item JPDA/JIPDA: joint probability reasoning; mathematically complex and questionable validity for SLAM consistency.
+    \item MHT: gold standard for DA, but computationally explosive → only suitable offline.
+    \item Particle filter (FastSLAM): conceptually works, but implementation pathologies and inconsistency make it unsuitable for SSS SLAM.
+    \item Conclude: not used due to poor real-time performance and complexity.
+\end{itemize}

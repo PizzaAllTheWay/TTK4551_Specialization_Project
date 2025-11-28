@@ -1,0 +1,40 @@
+\subsection{Problem of Loop Closure}
+\begin{itemize}
+    \item Running global JCBB every frame would explode exponentially → impossible in real-time.
+    \item Need separation between local DA (recent submaps) and global DA (loop closures).
+    \item Loop closure trigger must be fast and approximate—DA only verifies, not detects.
+    \item Use descriptor-based similarity on sonar landmark descriptors.
+    \item Apply nearest-neighbor search in descriptor space (not DA NN), built via KD-tree.
+    \item Use OpenCV FLANN matcher or MRPT nanoflann for fast comparisons.
+    \item Maintain a queue of last $N$ submaps → ignore newest frames to avoid matching with itself.
+    \item Trigger loop closure when similarity score exceeds threshold or is significantly higher than others.
+    \item Add periodic fallback trigger (every 50 frames) for safety.
+    \item On trigger: run global gating + JCBB on older map region to confirm true loop closure.
+    \item If confirmed → produce loop-closure landmark factors.
+    \item Landmark revalidation: if old landmark is re-seen and consistent, reset its “age” to young so it joins local DA again.
+\end{itemize}
+
+explain that one could run fastJCBB globally, but the shit would explode exponentially, so instead to make it real time need local (filter DA) vs global (loop closure DA) approach. this means the thing is fast.
+but now question is how do we know when there is a loop closure as we no longer have global DA, need a different way to keep track of global map in a more effective way than DA. Something that doesn't need to be precise, just fast, so we might get false global assumptions but then the global DA can handle those, at least we will not be running global DA every time if we are smart about it and design a method that doesn't have to many false positives to keep it real time.
+explain method for real time detecting loop closures in feature based SLAM-> use comparison methods for old landmarks to new ones to know when we are close somewhere.
+some similarity check 
+keep all 2D frames of sonar old
+perform feature matching algo or similarity checks (We use Descriptor-based matching (more robust) => nearest-neighbor search (NOT nearest neoghbout as in Data Asociation, just nearest value we can find, if it find a value big eough to a set thershold, trigger lol, important to menation this!!!) => (KD-tree) on descriptor vectors for fast compare, use something like OpenCV library) FINAL USE !!!!!!!FLANN Matcher!!!!!!!!!! ALGORITHM! For thsi mention we can use MRPT "nanoflann" function lib to make our lives easier.
+Also perform periodic triggers just in case to be safe that just check periodically if loop closed lol
+score each comparison
+if 1 comparison a lot bigger score then the rest OR a set threshold has been reached -> then we have loop closure 
+ALSO have a failsafe trigger, worst case have a periodic trigger that triggers each 50 steps or something to check if loop closure just to be sure if the other thing doesn't trigger lol.
+
+BUT also we cant check for the newest data because most likely we will math with newest data and we dont want global gating and global DA for that, that should have local gating, so the newest some amount of new data shoudl be ignored should startet maybe at 2D sonar images that are 1-5 Local Map objects back, idk maybe???? but then how do we handle if we know that its local or not. This is a bad idea gain so the previous targets detected tarcking them would be a pain in the ass os some other smarter way idk man its just weird :/
+THIUS MUST BE ADRESSED!!!
+SOLUTION:
+If you want a concrete implementation rule:
+-Keep a queue of the last N local submaps (e.g., last 5 sonar frames).
+-Local DA operates only on these.
+-Loop closure DA (global) is triggered if similarity > threshold with any submap older than N.
+So when a new measurement comes in:
+1)Check similarity against all older submaps beyond the local window (using FLANN + descriptor scoring).
+2)If score > threshold → run global gating + JCBB on that region.
+3)Otherwise → perform local gating + JCBB on recent submaps only.
+
+ALso landmark Revalidation: When an old landmark is successfully reobserved and confirmed through JCBB, it is reclassified as a new landmark, effectively resetting its age in the map.

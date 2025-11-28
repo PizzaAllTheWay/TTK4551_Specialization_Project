@@ -1,0 +1,35 @@
+\subsection{Integrated Data Association Framework for SLAM}
+\begin{itemize}
+    \item For each new scan:
+    \begin{itemize}
+        \item Perform similarity-based loop closure trigger using FLANN on old submaps (older than $N$).
+        \item Also check periodic trigger.
+    \end{itemize}
+    \item If loop closure suspected:
+    \begin{itemize}
+        \item Run global gating + JCBB on old region to confirm.
+    \end{itemize}
+    \item Otherwise:
+    \begin{itemize}
+        \item Run local gating + JCBB on recent $N$ submaps.
+    \end{itemize}
+    \item Landmark aging:
+    \begin{itemize}
+        \item Young landmarks age each scan.
+        \item When a landmark passes age $N$, it moves into loop-closure candidate set.
+    \end{itemize}
+    \item Landmark revalidation:
+    \begin{itemize}
+        \item When reobserved and passing JCBB, reset to young again.
+    \end{itemize}
+\end{itemize}
+Each scan:
+check trigger = (similarity checks (FLANN Matcher) + AND Perdioic trigger just in case + only look at features older than N lifespan to ensure we are not looking at a new feature)
+if loop trigger condition true:
+run large gating (global) + JCBB on old map regioon to verify if it's actually loop closure or not lol
+else:
+run small gating (local) + JCBB
+
+landmark Revalidation: When an old landmark is successfully reobserved and confirmed through JCBB, it is reclassified as a new landmark, effectively resetting its age in the map, so now its in the N lifespan as a young again, so next time we check mathing, it will not check for thsi landmark until it has aged.
+
+Age young landmarks that are still young. The landmarks that are already older than N dont need aging, just ignore them

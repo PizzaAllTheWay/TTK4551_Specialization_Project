@@ -1,0 +1,12 @@
+\subsection{Gating}
+\begin{itemize}
+    \item Define gating as the first stage of DA to prune incompatible landmark candidates.
+    \item Use Mahalanobis distance:
+    \[
+    \|x - \mu\|_{P} = \sqrt{(x-\mu)^{T} P^{-1} (x-\mu)}
+    \]
+    \item Explain that this produces elliptical gates based on predicted uncertainty. Imprortnat to note eleptical vs normal one and a picture on difference (Euclidean vs Mahalanobis)
+    \item Important for both local and global DA; avoids combinatorial explosion before JCBB.
+\end{itemize}
+
+IMPORTANT NOTE: Remember to delete Gating from iSAM and just refrence it to here and the picture instead!
