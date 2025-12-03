@@ -1,10 +1,16 @@
 \subsection{Introduction}
-\begin{itemize}
-    \item Explain the role of data association (DA) in SLAM: linking new landmark measurements to existing map landmarks or creating new ones.
-    \item Emphasize assumption of static or near-static environments, since dynamic-object DA remains an active research problem.
-    \item Underwater environments change slowly; seabed structure is mostly stationary → DA complexity is manageable.
-    \item Mention that DA output feeds the factor graph: every validated association produces measurement factors.
-    \item State that DA failures lead to catastrophic SLAM drift, thus robust gating + multi-stage consistency checks are required.
-    \item Mention that this field is a hot topic today and as of today no all size fits all solution exist for this problem, thus carefull cosnidertion and trial and error jesjes
-\end{itemize}
+\todo[inline]{Rewrite once everything is done}
+Data association (DA) is the mechanism that determines whether a new landmark observation corresponds to an existing map feature or should create a new one. It is the first decision point in SLAM and the gatekeeper for all information entering the factor graph, since every accepted match becomes a measurement factor linking poses and landmarks. As highlighted in the SLAM data association survey \cite{DA_review}, even a single incorrect association can cause the system to fail, collapse internally, and generate an inconsistent map and trajectory.
+\\ \\
+Most SLAM frameworks assume static or near static environments, since reliably handling moving objects in DA is still an unresolved research challenge. Several mitigation strategies exist, such as non Gaussian noise models, robust estimators, motion detection and removal of dynamic objects, or explicit object tracking, but these remain active research topics with no universally dependable solution. For this thesis, the environment is assumed to be near static, an assumption that holds reasonably well underwater over short to medium time scales, as seabed sediment, rocks, and larger structures change slowly and rarely move in ways that would affect landmark stability over short periods of time. For long term mapping over months and across large areas, this assumption becomes weaker, and additional care would be required to account for slow seabed shifts, sediment transport, and other gradual environmental changes.
+\\ \\
+Each validated association directly feeds the factor graph, turning a measurement into a constraint between poses and landmarks. Because the backend optimizer fully trusts these constraints, DA errors lead to catastrophic drift, broken maps, and long term inconsistency. Robust gating, Mahalanobis based compatibility checks, and multi stage verification therefore play a central role in preventing false matches from corrupting the graph.
+\\ \\
+Despite extensive research, data association remains a difficult and unsolved problem, with no one size fits all method. Real world performance depends on careful algorithm selection, parameter tuning, and practical trial and error, especially in sensing domains like side scan sonar where measurements are noisy and ambiguous. This chapter presents the DA strategy adopted in this work and motivates the design choices for achieving reliable and efficient SSS SLAM.
+
+
+
+
+
+
 

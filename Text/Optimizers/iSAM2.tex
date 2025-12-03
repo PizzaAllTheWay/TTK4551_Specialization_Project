@@ -15,7 +15,7 @@ Let the variables be robot poses $x_1,\dots,x_M$ and landmarks $l_1,\dots,l_N$, 
 \[
     f(\Theta) = \prod_{i} f_i(\Theta_i),
 \]
-Here, each factor $f_i$ depends only on its adjacent variables $\Theta_i$. How each factor is modeled depends on the situation. Because odometry and measurements are uncertain in the real world, factors should be represented with a probabilistic model. One of the easiest probabilistic models is Gaussian, which is easy to model and will work well later when working in Mahalanobis form to optimize the problem and solve it in simple manner (See Figure \ref{fig:mahalanobis-distance} for Mahalanobis form). Factor functions can therefore be modeled as follows:
+Here, each factor $f_i$ depends only on its adjacent variables $\Theta_i$. How each factor is modeled depends on the situation. Because odometry and measurements are uncertain in the real world, factors should be represented with a probabilistic model. One of the easiest probabilistic models is Gaussian, which is easy to model and will work well later when working in Mahalanobis form to optimize the problem and solve it in simple manner (See Figure \ref{fig:data-association-mahalanobis-distance} and Equation \eqref{eq:data-association-mahalanobis-distance} for Mahalanobis form). Factor functions can therefore be modeled as follows:
 \[
     \text{Prior:}\quad f_p(x_0)\ \propto\ \exp\!\Big(-\tfrac{1}{2}\|\mu_0 - x_0\|_{P_0}^2\Big),
 \]
@@ -51,7 +51,7 @@ Under Gaussian measurement models as defined in the previous subsection, each fa
 \[
     f_i(\Theta_i)\ \propto\ \exp\!\Big(-\tfrac12\,\|\,h_i(\Theta_i)-z_i\,\|^2_{\Sigma_i}\Big),
 \]
-This Gaussian form will simplify calculations as Gaussian is nice to work with. Here $h_i(\cdot)$ predicts what the sensor should see from the current variables $\Theta_i$, $z_i$ is the actual measurement, and $\Sigma_i$ is the measurement covariance. The notation $\|e\|^2_{\Sigma}\triangleq e^\top \Sigma^{-1} e$ is the squared Mahalanobis distance, which measures error in ``units of its noise'' (directions with low variance are penalized more). (See Picture \ref{fig:mahalanobis-distance})
+This Gaussian form will simplify calculations as Gaussian is nice to work with. Here $h_i(\cdot)$ predicts what the sensor should see from the current variables $\Theta_i$, $z_i$ is the actual measurement, and $\Sigma_i$ is the measurement covariance. The notation $\|e\|^2_{\Sigma}\triangleq e^\top \Sigma^{-1} e$ is the squared Mahalanobis distance, which measures error in ``units of its noise'' (directions with low variance are penalized more). (See Figure \ref{fig:data-association-mahalanobis-distance} and Equation \eqref{eq:data-association-mahalanobis-distance})
 \\ \\
 To combine all information, simply multiply the factor likelihoods. Products are awkward to optimize, instead take a negative logarithm to turn the product into a sum. Terms that do not depend on $\Theta$ drop out, and each Gaussian factor becomes a squared Mahalanobis residual weighted by its covariance. The result is one scalar objective that collects the prior, all odometry factors, all landmark measurements, and any loop closures. Small covariances make a factor count more, large covariances count less. In short, multiply the factors and take the negative log to get a single sum of squared errors. This can be write in compact form as:
 \[
