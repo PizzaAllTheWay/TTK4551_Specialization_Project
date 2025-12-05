@@ -3,24 +3,27 @@
 Rigid body motion in three dimensions can be expressed compactly using the homogeneous transformation matrix $T \in \mathrm{SE}(3)$ defined in Equation \ref{eq:SE3-definition}. These matrices combine rotation and translation into a single representation and are used to map coordinates between frames such as the navigation (NED), body, and sensor frames.  
 \\ \\
 The pose of the body frame relative to the navigation frame is written as
-$$
+\begin{equation}
     T_{b}^{n} =
     \begin{bmatrix}
         R_{b}^{n} & \mathbf{p}_{b}^{n} \\
         0 & 1
     \end{bmatrix}
-$$
+    \label{eq:system-modeling-se3-transform-structure}
+\end{equation}
+\noindent
 where $R_{b}^{n}$ is the rotation matrix from the body to the NED frame, and $\mathbf{p}_{b}^{n}$ is the position of the body origin expressed in NED coordinates.
 \\ \\
 A point $\mathbf{x}_{b}^{b}$ expressed in the body frame can be transformed to the NED frame as:
-$$
+\begin{equation}
     \mathbf{x}_{b}^{n}=
     T_{b}^{n}
     \begin{bmatrix}
         \mathbf{x}_{b}^{b} \\ 1
     \end{bmatrix}
     = R_{b}^{n}\mathbf{x}_{b}^{b} + \mathbf{p}_{b}^{n}
-$$
+    \label{eq:system-modeling-se3-transform-point}
+\end{equation}
 \noindent
 Composing multiple transformations is performed through matrix multiplication. For instance, if $T_{s}^{b}$ defines the transformation from a sensor frame to the body frame, then the sensor pose in the NED frame becomes
 $$

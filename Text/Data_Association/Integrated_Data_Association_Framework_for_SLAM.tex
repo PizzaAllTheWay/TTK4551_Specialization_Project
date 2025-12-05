@@ -48,7 +48,7 @@ This prevents the system from repeatedly treating the same valid landmark as an 
 \subsubsection{Summary of the Full Pipeline}
 Putting everything together, each scan proceeds as follows:
 \begin{enumerate}
-    \item \textbf{Loop-closure trigger}: Evaluate descriptor similarity (FLANN) + periodic check on all submaps older than $N$.
+    \item \textbf{Loop closure trigger}: Evaluate descriptor similarity (FLANN) + periodic check on all submaps older than $N$.
     \item \textbf{If triggered}: Run global gating and full JCBB using $P_{xx},P_{xL},P_{LL}$ to verify loop closure.
     \item \textbf{If not triggered}: Run local gating and lightweight JCBB using only $P_{xx}$ on recent submaps.
     \item \textbf{Landmark aging}: Age all young landmarks, those exceeding $N$ join the loop closure candidate pool.
