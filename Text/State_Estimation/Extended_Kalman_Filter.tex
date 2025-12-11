@@ -1,7 +1,5 @@
 \subsection{Extended Kalman Filter}
-The Kalman filter provides optimal state estimation for linear systems under Gaussian noise assumptions. However, most real world systems such as those involving vehicle dynamics, navigation, or orientation estimation are inherently nonlinear. To handle such systems, the Extended Kalman Filter (EKF) generalizes the Kalman filter framework by linearizing the nonlinear system around the current state estimate. This allows the Kalman filter formulation to be applied locally in a linearized form, maintaining recursive estimation in nonlinear environments.  
-\\ \\
-The nonlinear system and measurement models are expressed as
+The Extended Kalman Filter (EKF) adapts the Kalman filter to nonlinear systems by linearizing the process and measurement models around the current state estimate. This lets the standard Kalman filter equations operate locally while still handling nonlinear vehicle dynamics, navigation, and orientation systems. The nonlinear models are given by:
 $$
     \mathbf{x}_{k+1} = f(\mathbf{x}_k, \mathbf{u}_k) + \mathbf{w}_k, \qquad
     \mathbf{z}_k = h(\mathbf{x}_k) + \mathbf{v}_k
@@ -18,7 +16,7 @@ The Jacobian matrices $F_k$ and $H_k$ describe how small perturbations in the st
 \begin{figure}[H]
     \centering
     \includegraphics[width=1.0\linewidth]{Pictures/State_Estimation/Extended_Kalman_Filter/Extended_Kalman_Filter_Illustrated.png}
-    \caption{Illustration of local linearization in the Extended Kalman Filter. The nonlinear function $f(x)$ is approximated by its tangent around the current estimate, allowing local linear propagation. Image taken from Alex Becker's \textit{``Introduction to Kalman Filtering''}.\textsuperscript{\cite{extended_kalman_filter}}}
+    \caption{Illustration of local linearization in the Extended Kalman Filter. The nonlinear function $f(x)$ is approximated by its tangent around the current estimate, allowing local linear propagation.\textsuperscript{\cite{extended_kalman_filter}}}
     \label{fig:state-estimation-extended-kalman-filter}
 \end{figure}
 \noindent

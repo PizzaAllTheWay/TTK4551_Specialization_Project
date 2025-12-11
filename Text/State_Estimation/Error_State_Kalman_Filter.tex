@@ -2,7 +2,7 @@
 \subsubsection{Concept and Motivation}
 While the Extended Kalman Filter provides a powerful framework for nonlinear estimation, it still linearizes directly around the full nominal state. For systems such as the INS, where the state includes both position, velocity, and attitude (represented by quaternions), this approach can lead to numerical inconsistencies, unstable orientation updates, and loss of orthogonality in rotation representations.  
 \\ \\
-To address these issues, the Error State Kalman Filter (ESKF) reformulates the estimation problem by separating the system into two parts, a \textit{``nominal state''} $\mathbf{x}$ and a \textit{``small error state''} $\delta\mathbf{x}$. The nominal state follows the nonlinear dynamics of the INS, while the error state captures small deviations from this nominal trajectory. This approach allows the filter to maintain accurate nonlinear propagation of the nominal state while estimating only small, approximately linear error quantities. 
+To address these issues, the Error State Kalman Filter (ESKF) reformulates the estimation problem by separating the system into two parts, a nonlinear \textit{``nominal state''} $\mathbf{x}$ and a small linear \textit{``error state''} $\delta\mathbf{x}$. The nominal state follows the nonlinear dynamics of the INS, while the error state captures small deviations from this nominal trajectory. This approach allows the filter to maintain accurate nonlinear propagation of the nominal state while estimating only small, approximately linear error quantities. 
 
 
 
@@ -61,11 +61,7 @@ The linearized system matrices $A(\mathbf{x})$ and $G(\mathbf{x})$ are given by
     \end{bmatrix}
     \label{eq:state-estimation-error-state-linear-time-varying-matrices}
 \end{equation}
-In this representation, $R_b^n(\mathbf{q})$ is the rotation matrix from the body frame to the navigation frame obtained from the current quaternion estimate $\mathbf{q}$. The notation $[\cdot]_\times$ denotes the skew-symmetric operator, which converts a 3D vector into a matrix form representing the cross product.  
-\\ \\
-The matrix $A(\mathbf{x})$ captures how small perturbations in position, velocity, attitude, and sensor biases evolve over time. The upper rows model the kinematic coupling between position and velocity, while the middle rows describe how accelerometer and gyroscope bias errors influence the navigation solution through attitude and velocity. The matrix $G(\mathbf{x})$ maps the continuous time process noise into the error dynamics, distributing the effect of IMU sensor noise, bias noise, and other stochastic disturbances into their corresponding error states.  
-\\ \\
-This linearized form provides the foundation for propagating the error state covariance in the ESKF. It allows the nonlinear nominal INS to run independently, while the filter maintains a linear and well behaved model of how uncertainty evolves, a key advantage that improves both numerical stability and estimation consistency.
+In this representation, $R_b^n(\mathbf{q})$ is the rotation matrix from the body to the navigation frame obtained from the current quaternion estimate, and $[\cdot]_\times$ denotes the skew symmetric cross product operator. The matrix $A(\mathbf{x})$ describes how small perturbations in position, velocity, attitude, and sensor biases evolve, including the coupling between kinematics and IMU bias dynamics, while $G(\mathbf{x})$ maps continuous time IMU and bias noise into the error states. This linearized model enables covariance propagation in the ESKF by providing a well behaved approximation of how uncertainty evolves, while the nonlinear nominal INS runs independently.
 
 
 
@@ -78,13 +74,11 @@ Discretization of the continuous error dynamics is critical for digital implemen
 \end{equation}
 However, directly computing these expressions is infeasible in real-time embedded systems due to the computational cost of evaluating the matrix exponential and noise covariance integral at every time step. Several discretization strategies exist to approximate this process efficiently while maintaining filter stability and accuracy.  
 \\ \\
-The \textit{``Cayley'Hamilton series''} offers an exact polynomial expansion of the matrix exponential using the characteristic polynomial of $A(\mathbf{x})$. This approach is mathematically elegant and often employed for symbolic or algebraic analysis, particularly in time varying systems where analytic expressions for $A(\mathbf{x})$ are desired. However, in practical implementations, this method is highly inefficient. The repeated evaluation of high order polynomial terms and matrix powers makes it unsuitable for real-time embedded estimation where deterministic computational performance is required.  
+The \textit{``Cayley Hamilton series''} provides an exact polynomial expansion of the exponential using the characteristic polynomial of $A(\mathbf{x})$. However, it requires evaluating high order matrix powers and is therefore impractical for real-time estimation.
 \\ \\
-A more practical and robust method is the ZOH discretization, introduced previously in Equation \ref{eq:ZOH}. The ZOH assumes that both the control inputs and process noise remain constant within each sampling interval. Under this assumption, it preserves the exact dynamics of linear time invariant systems and ensures numerical stability of the discrete time model. In practice, the ZOH discretization is implemented using an augmented matrix exponential containing the continuous time system matrices $A(\mathbf{x})$ and $G(\mathbf{x})$, which yields the discrete time transition matrix $F_k$ and the process noise covariance $Q_k$. This approach provides an accurate mapping from the continuous error dynamics to their discrete time equivalent while avoiding the instability of low order approximations.  
+A more robust and widely used approach is the Zero Order Hold (ZOH) discretization introduced in \eqref{eq:ZOH}. By assuming constant inputs and noise within each sampling interval, ZOH preserves the exact dynamics of linear time invariant systems and yields the discrete transition matrix $F_k$ and process noise covariance $Q_k$ through an augmented matrix exponential. This provides an accurate continuous to discrete mapping while avoiding the instabilities typical of low order approximations.
 \\ \\
-While theoretically precise, the ZOH can still be computationally demanding for real-time embedded systems, especially when matrix dimensions are large or $A(\mathbf{x})$ varies significantly over time. To address this, the \textit{``Padé approximation with scaling and squaring''}, defined in Equations \ref{eq:pade1}-\ref{eq:pade3}, is used in this work to efficiently approximate the matrix exponential. The Padé method offers an excellent trade off between numerical accuracy and computational speed. It remains stable even for ill conditioned matrices and maintains consistent results across varying sampling periods. This combination of ZOH based discretization and Padé based exponential approximation forms the foundation for robust real-time implementation of the ESKF.  
-\\ \\
-Finally, it is important to emphasize that crude 1st order approximations, such as assuming $F_k \approx I + A(\mathbf{x})\Delta t$, should be strictly avoided. Although computationally inexpensive, these approximations can introduce significant numerical errors, degrade covariance consistency, and cause filter divergence under high dynamic motion or long sampling intervals.
+However, evaluating the augmented matrix exponential remains expensive for large or time varying systems. To address this, the \textit{``Padé approximation with scaling and squaring''} \eqref{eq:pade1}-\eqref{eq:pade3} is used in this work to compute the exponential efficiently and with good numerical conditioning. Padé offers a strong balance between speed and accuracy, making it suitable for embedded implementation. In contrast, crude first order approximations such as $F_k \approx I + A(\mathbf{x})\Delta t$ should be avoided, as they degrade covariance consistency and may cause divergence under high dynamics or long sampling intervals.
 
 
 
@@ -189,7 +183,7 @@ Overall, the ESKF provides significantly improved numerical stability, robustnes
 \begin{figure}[H]
     \centering
     \includegraphics[width=1.0\linewidth]{Pictures/State_Estimation/Error_State_Kalman_Filter/Error_State_Kalman_Filter_Illustrated.png}
-    \caption{Functional overview of the ESKF architecture. The filter propagates and estimates the small error state based on IMU data, updates it using GNSS measurements, and then injects the correction into the nominal state. After injection, the error state is reset to zero. This loop ensures stable and consistent estimation by combining fast IMU propagation with slower GNSS updates. Image taken from a paper on the Error State Kalman Filter.\textsuperscript{\cite{error_state_kalman_filter}}}
+    \caption{Functional overview of the ESKF architecture. The filter propagates and estimates the small error state based on IMU data, updates it using GNSS measurements, and then injects the correction into the nominal state. After injection, the error state is reset to zero. This loop ensures stable and consistent estimation by combining fast IMU propagation with slower GNSS updates.\textsuperscript{\cite{error_state_kalman_filter}}}
     \label{fig:state-estimation-error-state-kalman-filter}
 \end{figure}
 

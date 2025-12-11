@@ -4,7 +4,7 @@ Up to this point, all Kalman Filter variants, including the EKF and ESKF, approx
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.7\linewidth]{Pictures/State_Estimation/Unscented_Kalman_Filter_on_Manifolds/Unscented_Transform.png}
-    \caption{Comparison of different methods for nonlinear mean and covariance propagation. The figure contrasts (a) direct sampling of the true nonlinear distribution, (b) linearization using the Extended Kalman Filter (EKF), and (c) the Unscented Transform (UT), which captures the mean and covariance more accurately without linearization. Image taken from Unscented Kalman Filter paper.\textsuperscript{\cite{ukf}}}
+    \caption{Comparison of different methods for nonlinear mean and covariance propagation. The figure contrasts (a) direct sampling of the true nonlinear distribution, (b) linearization using the Extended Kalman Filter (EKF), and (c) the Unscented Transform (UT), which captures the mean and covariance more accurately without linearization.\textsuperscript{\cite{ukf}}}
     \label{fig:state-estimation-uncented-transform}
 \end{figure}
 
@@ -87,7 +87,7 @@ The \textit{``A Code for Unscented Kalman Filtering on Manifolds (UKF-M)''} \cit
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.7\linewidth]{Pictures/State_Estimation/Unscented_Kalman_Filter_on_Manifolds/Manifold_Mapping.png}
-    \caption{Mapping a local neighborhood in the state space (here: on the unit sphere $\mathbb{S}^2$) into $\mathbb{R}^n$ (here: the plane) allows for the use of standard sensor fusion algorithms without explicitly encoding the global topological structure. Image and figure text taken from an old UKF-M paper.\textsuperscript{\cite{ukf_manifold}}}
+    \caption{Mapping a local neighborhood in the state space (here: on the unit sphere $\mathbb{S}^2$) into $\mathbb{R}^n$ (here: the plane) allows for the use of standard sensor fusion algorithms without explicitly encoding the global topological structure.\textsuperscript{\cite{ukf_manifold}}}
     \label{fig:state-estimation-manifold-mapping}
 \end{figure}
 \noindent

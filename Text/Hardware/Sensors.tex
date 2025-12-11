@@ -1,6 +1,6 @@
 \subsection{Sensors}
 \subsubsection{Introduction}
-The microAmpere platform is equipped with a wide range of sensors supporting navigation, perception, and control tasks. For this work, the focus lies on the integration of a Side Scan Sonar and the development of an \todo{TAP: what does SSS stand for?}<SSS SLAM. Two of the existing sensors play a key role in enabling this, the Inertial Measurement Unit (IMU) and the Global Navigation Satellite System (GNSS). These sensors together provide accurate state estimation and position tracking, forming the foundation required for precise sonar data alignment, georeferencing, and mapping.
+The microAmpere platform is equipped with a wide range of sensors supporting navigation, perception, and control tasks. For this work, the focus lies on the integration of a Side Scan Sonar and the development of SLAM. Two of the existing sensors play a key role in enabling this, the Inertial Measurement Unit (IMU) and the Global Navigation Satellite System (GNSS). These sensors together provide accurate state estimation and position tracking, forming the foundation required for precise sonar data alignment, georeferencing, and mapping.
 
 
 
@@ -14,7 +14,7 @@ An overview of the IMU is shown in Figure \ref{fig:microAmpere-imu}, and its key
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.45\linewidth]{Pictures/Hardware/Sensors/IMU.png}
-    \caption{Sensonor STIM300 high-performance IMU used for internal navigation and pose estimation. Picture taken from Henrik Reimers master thesis on microAmpere ASV.\textsuperscript{\cite{microAmpere_hardware_master_thesis1}}}
+    \caption{Sensonor STIM300 high-performance IMU used for internal navigation and pose estimation.\textsuperscript{\cite{microAmpere_hardware_master_thesis1}}}
     \label{fig:microAmpere-imu}
 \end{figure}
 
@@ -52,7 +52,7 @@ Together with the onboard IMU, the dual GNSS system forms the foundation for the
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.9\linewidth]{Pictures/Hardware/Sensors/GNSS_Card_and_GNSS_Antenna.png}
-    \caption{(Left) SentiSystems Dual GNSS card with two u-blox ZED-F9P modules. (Right) SignalPlus GNSS antennas used for position and heading estimation. Picture taken from Henrik Reimers master thesis on microAmpere ASV.\textsuperscript{\cite{microAmpere_hardware_master_thesis1}}}
+    \caption{(Left) SentiSystems Dual GNSS card with two u-blox ZED-F9P modules. (Right) SignalPlus GNSS antennas used for position and heading estimation.\textsuperscript{\cite{microAmpere_hardware_master_thesis1}}}
     \label{fig:microAmpere-gnss}
 \end{figure}
 
@@ -90,7 +90,7 @@ An overview of the sonar system is shown in Figure \ref{fig:microAmpere-side-sca
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.5\linewidth]{Pictures/Hardware/Sensors/Side_Scan_Sonar.png}
-    \caption{DeepVision OSM Ethernet Side-Scan Sonar system with dual 680~kHz transducers used for seabed imaging and SLAM development. Picture adapted from Hogstads master thesis on BlueROV2 sonar integration.\textsuperscript{\cite{side_scan_sonar_master_thesis_old}}}
+    \caption{DeepVision OSM Ethernet Side-Scan Sonar system with dual 680~kHz transducers used for seabed imaging and SLAM development.\textsuperscript{\cite{side_scan_sonar_master_thesis_old}}}
     \label{fig:microAmpere-side-scan-sonar}
 \end{figure}
 

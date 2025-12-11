@@ -1,15 +1,11 @@
 \subsection{Bayes Filter}
-The Bayes filter provides the probabilistic foundation for recursive state estimation. It describes how a systems state distribution evolves over time as new measurements are received, based on the principles of Bayesian inference. The filter assumes that the process and measurement models form a Markov chain, where the current state $\mathbf{x}_k$ depends only on the previous state $\mathbf{x}_{k-1}$ and control input $\mathbf{u}_{k-1}$, and each measurement $\mathbf{z}_k$ depends only on the current state.  
-\\ \\
-This structure is known as a Hidden Markov Model, where the underlying system state is hidden and only indirectly observed through noisy sensor measurements. The process and measurement noise are assumed to be white, zero mean, and statistically independent, ensuring that all uncertainty can be modeled probabilistically within the Bayesian framework.  
+The Bayes filter provides the probabilistic foundation for recursive state estimation by modeling the system as a Markov process, where the current state $\mathbf{x}_k$ depends only on the previous state $\mathbf{x}_{k-1}$ and control input $\mathbf{u}_{k-1}$, and each measurement $\mathbf{z}_k$ depends only on the current state. This forms a Hidden Markov Model in which the true state is not directly observable and must be inferred from noisy sensor measurements. Both the process and measurement noise are assumed to be white, zero mean, and statistically independent, allowing the state distribution to be updated consistently within the Bayesian framework.  
 \\ \\
 The Bayes filter operates recursively in two stages: prediction and update. The \textit{``prediction step''} propagates the previous state estimate forward in time using the process model:
 $$
     p(\mathbf{x}_k | \mathbf{z}_{1:k-1}) = \int p(\mathbf{x}_k | \mathbf{x}_{k-1})\,p(\mathbf{x}_{k-1} | \mathbf{z}_{1:k-1})\,d\mathbf{x}_{k-1}
 $$
-This step accounts for system dynamics and process noise, providing a prior belief of the current state before any new measurement is considered.  
-\\ \\
-The \textit{``update step''} then incorporates the new measurement $\mathbf{z}_k$ to refine the estimate:
+This step accounts for system dynamics and process noise, providing a prior belief of the current state before any new measurement is considered. The \textit{``update step''} then incorporates the new measurement $\mathbf{z}_k$ to refine the estimate:
 $$
     p(\mathbf{x}_k | \mathbf{z}_{1:k}) =
     \frac{p(\mathbf{z}_k | \mathbf{x}_k)\,p(\mathbf{x}_k | \mathbf{z}_{1:k-1})}
@@ -26,8 +22,8 @@ A simplified overview of the process and measurement relationships is shown in F
 The formulation and structure presented here follow the conventions introduced by Edmund Brekke in \textit{``Fundamentals of Sensor Fusion''} \cite{sensor_fusion_book}, which form the theoretical foundation for the estimation framework implemented in this thesis.
 \begin{figure}[H]
     \centering
-    \includegraphics[width=1.0\linewidth]{Pictures/State_Estimation/Bayes_Filter/Hidden_Markov_Model.png}
-    \caption{Hidden Markov Model representation of the Bayes filter, showing the relationships between state $\mathbf{x}$, measurement $\mathbf{z}$, and control input $\mathbf{u}$. Image sourced from Lei Mao blog on Bayes Filters.\textsuperscript{\cite{bayes_filter}}}
+    \includegraphics[width=0.8\linewidth]{Pictures/State_Estimation/Bayes_Filter/Hidden_Markov_Model.png}
+    \caption{Hidden Markov Model representation of the Bayes filter, showing the relationships between state $\mathbf{x}$, measurement $\mathbf{z}$, and control input $\mathbf{u}$.\textsuperscript{\cite{bayes_filter}}}
     \label{fig:state-estimation-hidden-markov-model}
 \end{figure}
 

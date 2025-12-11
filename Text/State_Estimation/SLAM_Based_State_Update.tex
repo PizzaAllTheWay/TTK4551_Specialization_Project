@@ -1,4 +1,4 @@
-\subsection{SLAM-Based State Update}
+\subsection{SLAM based State Update}
 The SLAM-based state update provides globally consistent pose corrections to the state estimation filter, counteracting drift accumulated during inertial propagation. While the IMU supplies high rate relative motion updates, it lacks an absolute reference, causing position and attitude errors to increase over time. The SLAM output introduces an external correction derived from landmark observations, delivering drift free pose estimates in the navigation frame.  
 \\ \\
 In cases where GNSS coverage is limited or temporarily unavailable, the SLAM update serves as an alternative absolute reference, maintaining consistent localization by leveraging environmental features. This allows the vessel to preserve accurate navigation performance even in GNSS denied conditions.

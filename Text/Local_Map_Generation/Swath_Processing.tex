@@ -186,7 +186,7 @@ The result of the spline based normalization is a sonar image with a more unifor
 This normalization method offers an effective balance between computational simplicity and correction accuracy. While more advanced reflectance estimation or global filtering approaches can produce smoother illumination compensation, they are typically too computationally heavy for real-time use. In contrast, the smoothing cubic spline method achieves sufficient accuracy for onboard sonar processing and real-time SLAM integration, making it a practical and efficient choice.
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.9\linewidth]{Pictures/Local_Map_Generation/Swath_Processing/intensity_normalized.png}
+    \includegraphics[width=0.8\linewidth]{Pictures/Local_Map_Generation/Swath_Processing/intensity_normalized.png}
     \caption{The top image shows the blind zone removed sonar image with raw intensity constructed from the first 1000 swaths of the dataset. The bottom image shows the same image after smoothing cubic spline normalization, where artificial horizontal lines are almost invisible and overall illumination is more uniform.\textsuperscript{\cite{side_scan_sonar_master_thesis}}}
     \label{fig:local-map-generation-intensity-normalization}
 \end{figure}

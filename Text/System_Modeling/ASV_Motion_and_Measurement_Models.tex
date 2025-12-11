@@ -269,7 +269,7 @@ Overall, the INS based motion model offers a compact and computationally efficie
 
 
 \subsubsection{Aiding Measurement Model}
-The aiding measurements are obtained from a dual antenna GNSS system that provides absolute position and heading information in the NED frame. The two antennas are rigidly mounted on the bow, one on the port side and one on the starboard side, at known offsets from the vessels COG. This setup enables direct estimation of both the vessels global position and its yaw orientation, offering an absolute reference that continuously corrects the drift accumulated in the INS.  
+The aiding measurements are obtained from a dual antenna GNSS system that provides absolute position and heading information in the NED frame. The two antennas are rigidly mounted on the stern, one on the port side and one on the starboard side, at known offsets from the vessels COG. This setup enables direct estimation of both the vessels global position and its yaw orientation, offering an absolute reference that continuously corrects the drift accumulated in the INS.  
 \\ \\
 Accurate aiding of position and attitude is crucial for maintaining reliable long term navigation performance. While the INS can propagate the motion of the vessel accurately over short time spans, it inevitably accumulates errors due to sensor noise and bias drift. The GNSS updates counteract this drift by providing absolute position corrections, while the dual antenna baseline yields a precise heading measurement that stabilizes the yaw estimate, one of the most critical states for surface vessel guidance and control. Reliable yaw information directly improves trajectory tracking, waypoint following, and steering stability.  
 \\ \\

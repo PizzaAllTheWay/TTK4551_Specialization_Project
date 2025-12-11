@@ -45,7 +45,7 @@ where $s_\bullet = \sin(\bullet)$ and $c_\bullet = \cos(\bullet)$ for brevity. T
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.9\linewidth]{Pictures/System_Modeling/Orientation_Representations/NED_Frame_EUler_Angles.png}
-    \caption{Intrinsic sequence of rotations defining the Euler angles following the NED convention. Figure taken from Edmund Brekke book on Fundamentals of Sensor Fusion.\textsuperscript{\cite{sensor_fusion_book}}}
+    \caption{Intrinsic sequence of rotations defining the Euler angles following the NED convention.\textsuperscript{\cite{sensor_fusion_book}}}
     \label{fig:system-modeling-ned-euler}
 \end{figure}
 \noindent
@@ -72,15 +72,11 @@ When the pitch angle approaches $\theta = \pm90^{\circ}$, the cosine term $\cos\
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.9\linewidth]{Pictures/System_Modeling/Orientation_Representations/Gimbal_Lock.png}
-    \caption{Illustration of gimbal lock where the yaw and roll axes coincide, causing loss of one rotational degree of freedom. Picture taken from a research paper that explains gimbal lock with illustrations.\textsuperscript{\cite{gimbal_lock}}}
+    \caption{Illustration of gimbal lock where the yaw and roll axes coincide, causing loss of one rotational degree of freedom.\textsuperscript{\cite{gimbal_lock}}}
     \label{fig:system-modeling-gimbal-lock}
 \end{figure}
 \noindent
 Despite this limitation, Euler angles remain a practical choice for surface and marine robotics, where pitch and roll angles typically remain small. Their intuitive interpretation and computational simplicity make them well suited for real-time estimation and control near level operating conditions. In the case of an ASV, large attitude excursions are highly unlikely, as excessive roll or pitch would indicate a loss of stability or complete capsizing. Under such operational constraints, the singularity at $\theta = \pm90^{\circ}$ is never encountered, making the Euler representation both sufficient and efficient for navigation and SLAM applications.
-
-
-
-\newpage
 
 
 
@@ -125,41 +121,21 @@ When a vector $\mathbf{v}$ is rotated using $\mathbf{q}\mathbf{v}\mathbf{q}^{-1}
         \centering
         \includegraphics[width=\linewidth]{Pictures/System_Modeling/Orientation_Representations/quaternion_pic2.png}
     \end{minipage}
-    \caption{Geometric interpretation of quaternions on the unit hypersphere $S^3$. (Left) Decomposition into the real axis and imaginary $(i, j, k)$ subspace. (Right) Axis-angle representation showing how a quaternion encodes rotation by $\theta$ about the unit axis $\hat{u}$. Picture taken from article that explains quarterion rotation in a intuitive way.\textsuperscript{\cite{quaternions_explained}}}
+    \caption{Geometric interpretation of quaternions on the unit hypersphere $S^3$. (Left) Decomposition into the real axis and imaginary $(i, j, k)$ subspace. (Right) Axis-angle representation showing how a quaternion encodes rotation by $\theta$ about the unit axis $\hat{u}$.\textsuperscript{\cite{quaternions_explained}}}
     \label{fig:system-modeling-quaternion-geometry}
 \end{figure}
 \noindent
 Rotations using quaternions are performed through quaternion multiplication, which is associative but not commutative. Given two orientations $\mathbf{q}_1$ and $\mathbf{q}_2$, their combined rotation is expressed as
 $$
-    \mathbf{q}_{\text{combined}} = \mathbf{q}_2 \otimes \mathbf{q}_1,
+    \mathbf{q}_{\text{combined}} = \mathbf{q}_2 \otimes \mathbf{q}_1
 $$
 where $\otimes$ denotes the quaternion product. The rotation of a vector $\mathbf{v}$ in three dimensional space can then be performed as
 $$
-    \mathbf{v}' = \mathbf{q} \otimes \mathbf{v}_q \otimes \mathbf{q}^{-1},
+    \mathbf{v}' = \mathbf{q} \otimes \mathbf{v}_q \otimes \mathbf{q}^{-1}
 $$
 where $\mathbf{v}_q = [0~v_x~v_y~v_z]^T$ is the quaternion form of the vector $\mathbf{v}$. This operation applies the rotation represented by $\mathbf{q}$ to $\mathbf{v}$ in a smooth and continuous manner without encountering singularities.  
 \\ \\
-For smooth orientation transitions, quaternions can be interpolated using Spherical Linear Interpolation (SLERP). Instead of blending components linearly, SLERP moves along the great circle that connects two orientations on the unit quaternion sphere $S^3$. This ensures that the interpolated motion follows a constant angular velocity and remains at a fixed distance from the sphere center, preserving rotation smoothness and avoiding distortion.  
-\\ \\
-Given two normalized quaternions $\mathbf{q}_1$ and $\mathbf{q}_2$, the interpolation for $t \in [0,1]$ is defined as
-$$
-    \text{SLERP}(\mathbf{q}_1, \mathbf{q}_2; t) =
-    \frac{\sin((1-t)\Omega)}{\sin(\Omega)}\mathbf{q}_1 +
-    \frac{\sin(t\Omega)}{\sin(\Omega)}\mathbf{q}_2,
-$$
-where $\Omega = \cos^{-1}(\mathbf{q}_1 \cdot \mathbf{q}_2)$ represents the angle between the two quaternions. When $t = 0$, the result is $\mathbf{q}_1$, and when $t = 1$, the result is $\mathbf{q}_2$. Intermediate values of $t$ trace the shortest rotation path between the two orientations.  
-\\ \\
-This method is widely used in robotics, computer graphics, and navigation to generate smooth transitions between different orientations. SLERP ensures that intermediate orientations are evenly spaced in angular distance, resulting in constant rotational velocity, a property important for stable attitude control and estimation.  
-\\ \\
-To ensure interpolation follows the shortest possible rotation path, many implementations adjust the sign of one quaternion when their dot product is negative. This avoids interpolation along the long arc (greater than $180^{\circ}$) and guarantees smooth motion along the minimal angular distance. Figure \ref{fig:system-modeling-quaternion-SLERP} illustrates this process, showing both the \textit{``short''} and the \textit{``natural''} interpolation paths along the quaternion sphere.
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=0.75\linewidth]{Pictures/System_Modeling/Orientation_Representations/quaternion_SLERP.png}
-    \caption{Spherical linear interpolation (SLERP) between two orientations $\mathbf{q}_1$ and $\mathbf{q}_2$ on the unit quaternion sphere. The \textit{``short''} path minimizes angular distance, while the \textit{``natural''} path follows the original direction without sign correction. Figure taken from MATLAB documentation for illustration purposes.\textsuperscript{\cite{quaternions_SLERP}}}
-    \label{fig:system-modeling-quaternion-SLERP}
-\end{figure}
-\noindent
-In practical applications, quaternions are widely used in estimators and sensors where singularity free orientation handling is critical. The IMU on the microAmpere platform outputs attitude in quaternion form, which integrates naturally with sensor fusion algorithms such as the Error State Kalman Filter (ESKF) discussed later in the report. These algorithms rely on quaternion algebra to represent small attitude perturbations efficiently and avoid numerical instability associated with Euler angle singularities.  
+In practical applications, quaternions are widely used in estimators and sensors where singularity free orientation handling is critical. The IMU on the microAmpere ASV platform outputs attitude in quaternion form, which integrates naturally with sensor fusion algorithms such as the Error State Kalman Filter (ESKF) discussed later in the report. These algorithms rely on quaternion algebra to represent small attitude perturbations efficiently and avoid numerical instability associated with Euler angle singularities.  
 \\ \\
 The main advantages of quaternions include their smooth and continuous representation of orientation, absence of gimbal lock, and computational efficiency in rotation composition and interpolation. They maintain numerical stability under integration and are well suited for optimization and estimation algorithms. However, quaternions require one additional parameter compared to Euler angles and lack intuitive physical meaning, as their four components do not directly correspond to measurable angular quantities. Furthermore, they are less straightforward to interpret and manipulate mathematically, often requiring specialized operations such as normalization, conjugation, and noncommutative multiplication. Despite these challenges, their robustness and compatibility with modern sensor fusion and control frameworks make quaternions a preferred internal representation for real-time navigation and estimation systems.
 
@@ -217,7 +193,7 @@ The curved surface of the $\mathrm{SE}(3)$ manifold represents all possible pose
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.8\linewidth]{Pictures/System_Modeling/Orientation_Representations/lie_group_tangent_space.png}
-    \caption{Visualization of the $\mathrm{SE}(3)$ manifold and its tangent space $\mathfrak{se}(3)$. Small motions are represented in the tangent space and mapped to the manifold through the exponential map $\exp(\cdot)$, while the logarithmic map $\log(\cdot)$ projects manifold elements back to the local linear space. Figure taken from Nikolay Atanasov lecture notes on Sensing \& Estimation in Robotics.\textsuperscript{\cite{lie_groups_presentation}}}
+    \caption{Visualization of the $\mathrm{SE}(3)$ manifold and its tangent space $\mathfrak{se}(3)$. Small motions are represented in the tangent space and mapped to the manifold through the exponential map $\exp(\cdot)$, while the logarithmic map $\log(\cdot)$ projects manifold elements back to the local linear space.\textsuperscript{\cite{lie_groups_presentation}}}
     \label{fig:system-modeling-so3-se3}
 \end{figure}
 \noindent
