@@ -20,7 +20,7 @@ The Jacobian matrices $F_k$ and $H_k$ describe how small perturbations in the st
     \label{fig:state-estimation-extended-kalman-filter}
 \end{figure}
 \noindent
-An accurate discretization of the continuous time dynamics is essential to ensure consistent state propagation. In this work, the continuous model $\dot{\mathbf{x}} = A\mathbf{x} + B\mathbf{u}$ is discretized using the \textit{``Zero-Order Hold (ZOH)''} method, which assumes that the control input remains constant within each sampling interval $[k\Delta t, (k+1)\Delta t)$.  
+An accurate discretization of the continuous time dynamics is essential to ensure consistent state propagation. Here, the continuous model $\dot{\mathbf{x}} = A\mathbf{x} + B\mathbf{u}$ is discretized using the \textit{``Zero-Order Hold (ZOH)''} method, which assumes that the control input remains constant within each sampling interval $[k\Delta t, (k+1)\Delta t)$.  
 \\ \\
 The resulting discrete time model is given by
 $$
@@ -33,7 +33,7 @@ $$
 $$
 This can be computed compactly using the augmented matrix exponential
 \begin{equation}
-    e\,^{
+    e^{
         \begin{bmatrix}
             A & B \\ 
             0 & 0

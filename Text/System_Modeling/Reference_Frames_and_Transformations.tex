@@ -47,9 +47,10 @@ These homogeneous transformations form the foundation for defining global and lo
 Global reference frames provide the foundation for representing absolute positions on Earth and are essential for all GNSS based navigation and mapping systems. Since GNSS receivers provide position estimates in a global Earth fixed frame, while navigation and control systems typically operate in local frames such as NED or body coordinates, it becomes necessary to define consistent global reference models to enable accurate transformations between these coordinate systems.   
 \\ \\
 The two main reference systems used for this purpose are the World Geodetic System 1984 (WGS84) geodetic model, which defines the Earths ellipsoidal shape and geodetic coordinates (latitude, longitude, altitude), and the Earth-Centered Earth-Fixed (ECEF) Cartesian frame, which expresses these same positions as 3D Cartesian coordinates centered at the Earths center of mass. These systems provide the common link between GNSS measurements and local navigation frames used in estimation and control.
-\\ \\
-\textbf{WGS84} 
-\\ \noindent
+
+\newpage
+
+\paragraph{WGS84} \mbox{}\\[0.5em] \noindent
 The World Geodetic System 1984 (WGS84) is the global geodetic reference used by all major GNSS systems. It defines an Earth-fixed ellipsoidal model that closely approximates the planets mean shape, accounting for the equatorial bulge caused by rotation. Although regional realizations such as \textit{``ETRS89''} (European Terrestrial Reference System 1989) are used in Europe to reduce tectonic drift, the WGS84 reference remains the standard for GNSS based navigation in Norway and most marine applications, with differences between the two systems being only a few decimeters.
 \\ \\
 The WGS84 model defines the Earth as an oblate ellipsoid, flattened at the poles and expanded at the equator. It serves as the global geodetic reference for GPS and most modern satellite navigation systems. The ellipsoid parameters are defined as $a = 6378137.0~\text{m}$ and $f = 1/298.257223563$, where $a$ is the semi major axis and $f$ is the flattening factor. The semi minor axis can then be computed as $b = a(1-f)$.  
@@ -57,13 +58,14 @@ The WGS84 model defines the Earth as an oblate ellipsoid, flattened at the poles
 A position on Earth is defined by three geodetic coordinates. First the latitude $\varphi$, which is the angle between the equatorial plane and the ellipsoid normal. Then the longitude $\lambda$, which is the angle between the Greenwich meridian and the projection of the point onto the equatorial plane. Finally the altitude $h$, which is the height above the ellipsoidal surface. These coordinates describe a points global position and are the standard output format from all GNSS receivers.
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.7\linewidth]{Pictures/System_Modeling/Reference_Frames_and_Transformations/WGS84.png}
+    \includegraphics[width=0.8\linewidth]{Pictures/System_Modeling/Reference_Frames_and_Transformations/WGS84.png}
     \caption{WGS84 ellipsoidal Earth model showing the relationship between latitude, longitude, and altitude.\textsuperscript{\cite{WGS84}}}
     \label{fig:system-Modeling-wgs84-ellipsoid}
 \end{figure}
-\noindent
-\textbf{ECEF}
-\\ \noindent
+
+\newpage
+
+\paragraph{ECEF} \mbox{}\\[0.5em] \noindent
 The Earth-Centered Earth-Fixed (ECEF) frame is a three dimensional Cartesian coordinate system with its origin at the Earths center of mass. The $x$-axis passes through the intersection of the equator and the Greenwich meridian, the $y$-axis lies along the equator $90^{\circ}$ east of the $x$-axis, and the $z$-axis points toward the North Pole. The ECEF frame rotates with the Earth and is commonly used for expressing GNSS positions in Cartesian form.  
 \\ \\
 The transformation from geodetic coordinates WGS84 $(\varphi, \lambda, h)$ to ECEF coordinates $(x, y, z)$ is given by:
@@ -88,12 +90,14 @@ The WGS84 and ECEF frames together form the foundation of all global navigation 
 
 
 
+\newpage
+
+
+
 \subsubsection{Local Reference Frames}
-Local reference frames are used to describe the motion and orientation of vehicles in a way that is intuitive and convenient for navigation, estimation, and control. In marine and aerial systems, the two most common local frames are the North-East-Down (NED) frame and the Body frame. These provide a consistent way to represent vehicle states such as position, velocity, and attitude relative to the Earth.  
+Local reference frames provide a convenient way to describe vehicle motion and orientation for navigation, estimation, and control. Marine and aerial systems commonly use the North East Down (NED) frame and the Body frame to represent position, velocity, and attitude consistently. The NED frame is a local tangent frame with axes pointing north, east, and down, aligned with compass directions and suited for interpreting GNSS and IMU data. Its origin is typically placed near the vehicles initial position.
 \\ \\
-The NED frame is a local tangent frame fixed to a point on the Earths surface, with the $x$-axis pointing toward geographic north, the $y$-axis pointing east, and the $z$-axis pointing downward, perpendicular to the ellipsoid. This convention is widely used in navigation because it aligns naturally with compass directions and simplifies interpretation of GNSS and IMU data. The origin of the NED frame is typically defined at a reference point near the vehicles initial position, tangent to the Earth at that location.  
-\\ \\
-The Body frame is attached to the vehicle itself, with its origin at the vehicles center of gravity or another defined point. The $x$-axis points forward along the vehicles longitudinal direction, the $y$-axis points to the right, and the $z$-axis points downward. All onboard sensor measurements, such as accelerations, angular velocities, and forces, are naturally expressed in this frame.  
+The Body frame is fixed to the vehicle, with $x$ forward, $y$ to the right, and $z$ downward, usually defined at the center of gravity. Sensor measurements such as accelerations, angular rates, and forces are naturally expressed in this frame, making it essential for modeling and control.
 \\ \\
 \begin{figure}[H]
     \centering

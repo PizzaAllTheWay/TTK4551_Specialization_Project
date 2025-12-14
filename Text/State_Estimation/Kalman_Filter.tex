@@ -25,12 +25,12 @@ $$
 $$
 where $\Delta t$ is the sampling period. This formulation comes directly from the analytical solution of the linear time invariant (LTI) differential equation and preserves the systems true dynamics. It is commonly used in simulation and offline analysis where computational cost is less critical.  
 \\ \\
-For real-time embedded systems, a simpler and computationally efficient approximation is usually applied. When the sampling interval $\Delta t$ is small, the matrix exponential can be approximated using a first order Taylor expansion,
+For real-time embedded systems, a simpler and computationally efficient approximation is usually applied. When the sampling interval $\Delta t$ is small, the matrix exponential can be approximated using a first order Taylor expansion
 $$
     F \approx I + A\Delta t, \qquad
-    G \approx B\Delta t.
+    G \approx B\Delta t
 $$
-This approach, known as the forward Euler or Newton-Euler discretization, provides sufficient accuracy for high-rate estimation and control applications while requiring minimal computation. The resulting discrete system maintains stability and precision as long as $\Delta t$ remains small relative to the systems dominant time constants.  
+This approach, known as the forward Euler or Newton-Euler discretization, provides sufficient accuracy for high rate estimation and control applications while requiring minimal computation. The resulting discrete system maintains stability and precision as long as $\Delta t$ remains small relative to the systems dominant time constants.  
 \\ \\
 Higher order integration methods such as ERK schemes can also be used to improve numerical accuracy. These methods evaluate the process function multiple times within each integration step, producing a more accurate approximation of the continuous dynamics. However, in most practical navigation and estimation systems, such increased precision provides limited benefit. Since the filter state is frequently corrected by external sensor updates, the integration error accumulated between prediction steps remains small. Therefore, the forward Euler discretization is generally preferred for real-time embedded implementations due to its simplicity, deterministic execution time, and sufficient numerical accuracy.  
 \\ \\

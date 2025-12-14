@@ -66,6 +66,6 @@ $$
         \mathbf{p}_{b/O}^{n} & \mathbf{v}_{b/O}^{n} & \mathbf{q} & \mathbf{a}_b & \mathbf{\omega}_b
     \end{bmatrix}^\top
 $$
-where position, velocity, and attitude are expressed in the navigation frame, and accelerometer and gyroscope biases evolve in the body frame. This structure provides a compact yet complete representation of the vehicle motion and sensor dynamics.  
+where position, velocity, and attitude are expressed in the NED frame, and accelerometer and gyroscope biases evolve in the Body frame. This structure provides a compact yet complete representation of the vehicle motion and sensor dynamics.  
 \\ \\
 Overall, the Manifold based Unscented Kalman Filter (UKF-M) appears to be the most suitable framework for this project, offering a good compromise between numerical stability, modeling accuracy, and implementation simplicity. It eliminates the need for Jacobians while preserving geometric consistency for quaternion based attitude estimation.
